@@ -72,7 +72,7 @@ def launch(
         )
 
     port = find_open_server_port()
-    args = str(path) + " " + str(port)
+    args = [str(path), str(port)]
     DEFAULT_LOGGER.info("Launching RLBotServer with via %s", args)
 
     return subprocess.Popen(args, shell=True, cwd=directory), port
