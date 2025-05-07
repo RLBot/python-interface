@@ -1,3 +1,4 @@
+#:schema https://rlbot.org/schemas/agent.json
 [settings]
 name = "Nexto (Toxic!)"
 loadout_file = "loadout.toml"

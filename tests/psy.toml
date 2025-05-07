@@ -9,7 +9,6 @@ game_map_upk = "Stadium_P"
 
 [[cars]]
 team = 0
-config_file = "psy/bot.toml"
 type = "Psyonix"
 skill = "Beginner"
 
