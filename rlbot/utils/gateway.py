@@ -77,7 +77,7 @@ def launch(
     if CURRENT_OS == "Windows":
         args = [str(path), str(port)]
     else:
-        args = f"{path} {port}" # on Unix, when shell=True, args must be a string for flags to reach the executable
+        args = f"{path} {port}"  # on Unix, when shell=True, args must be a string for flags to reach the executable
     DEFAULT_LOGGER.info("Launching RLBotServer with via %s", args)
 
     return subprocess.Popen(args, shell=True, cwd=directory), port
