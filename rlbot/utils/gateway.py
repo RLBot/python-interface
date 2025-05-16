@@ -11,6 +11,8 @@ from rlbot.interface import RLBOT_SERVER_PORT
 from rlbot.utils.logging import DEFAULT_LOGGER
 from rlbot.utils.os_detector import CURRENT_OS
 
+if CURRENT_OS != "Windows":
+    import shlex
 
 def find_main_executable_path(
     main_executable_path: Path, main_executable_name: str
@@ -77,7 +79,7 @@ def launch(
     if CURRENT_OS == "Windows":
         args = [str(path), str(port)]
     else:
-        args = f"{path} {port}"  # on Unix, when shell=True, args must be a string for flags to reach the executable
+        args = f"{shlex.quote(path.as_posix())} {port}"  # on Unix, when shell=True, args must be a string for flags to reach the executable
     DEFAULT_LOGGER.info("Launching RLBotServer with via %s", args)
 
     return subprocess.Popen(args, shell=True, cwd=directory), port
