@@ -217,7 +217,7 @@ def load_player_loadout(path: Path | str, team: int) -> flat.PlayerLoadout:
 
 
 def load_player_config(
-    path: Path | str,
+    path: Path | str | None,
     type: flat.CustomBot | flat.Psyonix,
     team: int,
     name_override: str | None = None,
@@ -227,6 +227,20 @@ def load_player_config(
     Reads the bot toml file at the provided path and
     creates a `PlayerConfiguration` of the given type for the given team.
     """
+    if path is None:
+        loadout = (
+            load_player_loadout(loadout_override, team)
+            if loadout_override is not None
+            else None
+        )
+
+        return flat.PlayerConfiguration(
+            type,
+            name_override or "",
+            team,
+            loadout=loadout,
+        )
+
     path = Path(path)
     with open(path, "rb") as f:
         config = tomllib.load(f)
