@@ -55,9 +55,7 @@ class Renderer:
     _screen_height_factor = 1.0
 
     def __init__(self, game_interface: SocketRelay):
-        self._render_group: Callable[[flat.RenderGroup], None] = (
-            game_interface.send_render_group
-        )
+        self._render_group: Callable[[flat.RenderGroup], None] = game_interface.send_msg
 
         self._remove_render_group: Callable[[int], None] = (
             game_interface.remove_render_group

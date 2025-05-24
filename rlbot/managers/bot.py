@@ -107,7 +107,7 @@ class Bot:
             exit()
 
         self._initialized_bot = True
-        self._game_interface.send_init_complete()
+        self._game_interface.send_msg(flat.InitComplete())
 
     def _handle_match_config(self, match_config: flat.MatchConfiguration):
         self.match_config = match_config
@@ -154,7 +154,7 @@ class Bot:
             return
 
         player_input = flat.PlayerInput(self.index, controller)
-        self._game_interface.send_player_input(player_input)
+        self._game_interface.send_msg(player_input)
 
     def _run(self):
         running = True
@@ -237,7 +237,7 @@ class Bot:
         - `display`: The message to be displayed in the game in "quick chat", or `None` to display nothing.
         - `team_only`: If True, only your team will receive the message.
         """
-        self._game_interface.send_match_comm(
+        self._game_interface.send_msg(
             flat.MatchComm(
                 self.index,
                 self.team,
@@ -261,7 +261,7 @@ class Bot:
         """
 
         game_state = fill_desired_game_state(balls, cars, match_info, commands)
-        self._game_interface.send_game_state(game_state)
+        self._game_interface.send_msg(game_state)
 
     def set_loadout(self, loadout: flat.PlayerLoadout, index: Optional[int] = None):
         """
@@ -270,9 +270,7 @@ class Bot:
         Does nothing if called outside `initialize` unless state setting is enabled in which case it
         respawns the car with the new loadout.
         """
-        self._game_interface.send_set_loadout(
-            flat.SetLoadout(index or self.index, loadout)
-        )
+        self._game_interface.send_msg(flat.SetLoadout(index or self.index, loadout))
 
     def initialize(self):
         """
