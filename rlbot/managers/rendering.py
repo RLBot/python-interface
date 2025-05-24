@@ -51,9 +51,7 @@ class Renderer:
     _current_renders: list[flat.RenderMessage] = []
 
     def __init__(self, game_interface: SocketRelay):
-        self._render_group: Callable[[flat.RenderGroup], None] = (
-            game_interface.send_render_group
-        )
+        self._render_group: Callable[[flat.RenderGroup], None] = game_interface.send_msg
 
         self._remove_render_group: Callable[[int], None] = (
             game_interface.remove_render_group
