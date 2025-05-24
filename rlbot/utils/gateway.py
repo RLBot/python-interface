@@ -14,6 +14,7 @@ from rlbot.utils.os_detector import CURRENT_OS
 if CURRENT_OS != "Windows":
     import shlex
 
+
 def find_main_executable_path(
     main_executable_path: Path, main_executable_name: str
 ) -> tuple[Path, Optional[Path]]:
