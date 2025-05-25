@@ -14,6 +14,8 @@ from rlbot.managers import Renderer
 from rlbot.utils import fill_desired_game_state
 from rlbot.utils.logging import DEFAULT_LOGGER, get_logger
 
+WARNED_SPAWN_ID_DEPRECATED = False
+
 
 class Hivemind:
     """
@@ -30,7 +32,18 @@ class Hivemind:
     team: int = -1
     indices: list[int] = []
     names: list[str] = []
-    spawn_ids: list[int] = []
+    player_ids: list[int] = []
+
+    @property
+    def spawn_ids(self) -> list[int]:
+        global WARNED_SPAWN_ID_DEPRECATED
+        if not WARNED_SPAWN_ID_DEPRECATED:
+            WARNED_SPAWN_ID_DEPRECATED = True
+            self._logger.warning(
+                "'spawn_id' getter accessed, which is deprecated in favor of 'player_id'."
+            )
+
+        return self.player_ids
 
     match_config = flat.MatchConfiguration()
     """
@@ -92,9 +105,9 @@ class Hivemind:
             return
 
         # Search match settings for our spawn ids
-        for spawn_id in self.spawn_ids:
+        for player_id in self.player_ids:
             for player in self.match_config.player_configurations:
-                if player.spawn_id == spawn_id:
+                if player.player_id == player_id:
                     self.names.append(player.name)
                     self.loggers.append(get_logger(player.name))
                     break
@@ -128,7 +141,7 @@ class Hivemind:
     ):
         self.team = player_mappings.team
         for controllable in player_mappings.controllables:
-            self.spawn_ids.append(controllable.spawn_id)
+            self.player_ids.append(controllable.identifier)
             self.indices.append(controllable.index)
 
         self._has_player_mapping = True

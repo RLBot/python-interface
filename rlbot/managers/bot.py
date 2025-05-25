@@ -13,6 +13,8 @@ from rlbot.managers.rendering import Renderer
 from rlbot.utils import fill_desired_game_state
 from rlbot.utils.logging import DEFAULT_LOGGER, get_logger
 
+WARNED_SPAWN_ID_DEPRECATED = False
+
 
 class Bot:
     """
@@ -28,7 +30,18 @@ class Bot:
     team: int = -1
     index: int = -1
     name: str = ""
-    spawn_id: int = 0
+    player_id: int = 0
+
+    @property
+    def spawn_id(self) -> int:
+        global WARNED_SPAWN_ID_DEPRECATED
+        if not WARNED_SPAWN_ID_DEPRECATED:
+            WARNED_SPAWN_ID_DEPRECATED = True
+            self.logger.warning(
+                "'spawn_id' getter accessed, which is deprecated in favor of 'player_id'."
+            )
+
+        return self.player_id
 
     match_config = flat.MatchConfiguration()
     """
@@ -92,7 +105,7 @@ class Bot:
 
         # Search match settings for our name
         for player in self.match_config.player_configurations:
-            if player.spawn_id == self.spawn_id:
+            if player.player_id == self.player_id:
                 self.name = player.name
                 self.logger = get_logger(self.name)
                 break
@@ -124,7 +137,7 @@ class Bot:
     ):
         self.team = player_mappings.team
         controllable = player_mappings.controllables[0]
-        self.spawn_id = controllable.spawn_id
+        self.player_id = controllable.identifier
         self.index = controllable.index
         self._has_player_mapping = True
 

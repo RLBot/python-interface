@@ -83,12 +83,18 @@ class Renderer:
         t = value * (1 - (1 - f) * saturation)
 
         match i % 6:
-            case 0: r, g, b = value, t, p
-            case 1: r, g, b = q, value, p
-            case 2: r, g, b = p, value, t
-            case 3: r, g, b = p, q, value
-            case 4: r, g, b = t, p, value
-            case 5: r, g, b = value, p, q
+            case 0:
+                r, g, b = value, t, p
+            case 1:
+                r, g, b = q, value, p
+            case 2:
+                r, g, b = p, value, t
+            case 3:
+                r, g, b = p, q, value
+            case 4:
+                r, g, b = t, p, value
+            case 5:
+                r, g, b = value, p, q
 
         return flat.Color(math.floor(r * 255), math.floor(g * 255), math.floor(b * 255))
 
