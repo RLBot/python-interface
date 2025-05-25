@@ -30,6 +30,13 @@ class RenderFun(Script):
 
             self.do_render(radius)
 
+        self.renderer.begin_rendering('tick')
+        hsv = self.renderer.create_color_hsv(packet.match_info.seconds_elapsed * 0.1, 1.0, 1.0)
+        self.renderer.set_resolution(1920, 1080)
+        self.renderer.draw_string_2d('HSV 300px 50px', 300, 50, 1.0, hsv)
+        self.renderer.set_resolution(1, 1)
+        self.renderer.end_rendering()
+
     def do_render(self, radius: float):
         self.renderer.begin_rendering()
 

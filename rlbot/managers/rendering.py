@@ -1,3 +1,4 @@
+import math
 from collections.abc import Callable, Sequence
 from typing import Optional
 
@@ -50,6 +51,9 @@ class Renderer:
     _group_id: Optional[int] = None
     _current_renders: list[flat.RenderMessage] = []
 
+    _screen_width_factor = 1.0
+    _screen_height_factor = 1.0
+
     def __init__(self, game_interface: SocketRelay):
         self._render_group: Callable[[flat.RenderGroup], None] = (
             game_interface.send_render_group
@@ -59,9 +63,36 @@ class Renderer:
             game_interface.remove_render_group
         )
 
+    def set_resolution(self, screen_width: float, screen_height: float):
+        """
+        By default, the renderer uses screen-space coordinates for 2d, e.g. 0.1 is 10% of screen width.
+        Use this function to declare the screen's size in pixels, if you prefer working in pixel coordinates.
+        After setting this, `draw_string_2d('Hi', 100, 200, ...)` will draw 'Hi' at pixel coordinates (100, 200).
+        """
+        self._screen_width_factor = 1.0 / screen_width
+        self._screen_height_factor = 1.0 / screen_height
+
     @staticmethod
     def create_color(red: int, green: int, blue: int, alpha: int = 255) -> flat.Color:
         return flat.Color(red, green, blue, alpha)
+
+    @staticmethod
+    def create_color_hsv(hue: float, saturation: float, value: float) -> flat.Color:
+        i = math.floor(hue * 6)
+        f = hue * 6 - i
+        p = value * (1 - saturation)
+        q = value * (1 - f * saturation)
+        t = value * (1 - (1 - f) * saturation)
+
+        match i % 6:
+            case 0: r, g, b = value, t, p
+            case 1: r, g, b = q, value, p
+            case 2: r, g, b = p, value, t
+            case 3: r, g, b = p, q, value
+            case 4: r, g, b = t, p, value
+            case 5: r, g, b = value, p, q
+
+        return flat.Color(math.floor(r * 255), math.floor(g * 255), math.floor(b * 255))
 
     @staticmethod
     def team_color(team: int, alt_color: bool = False) -> flat.Color:
@@ -215,13 +246,14 @@ class Renderer:
         """
         Draws text in 2d space.
         X and y uses screen-space coordinates, i.e. 0.1 is 10% of the screen width/height.
+        Use `set_resolution` to change to pixel coordinates.
         Characters of the font are 20 pixels tall and 10 pixels wide when `scale == 1.0`.
         """
         self.draw(
             flat.String2D(
                 text,
-                x,
-                y,
+                x * self._screen_width_factor,
+                y * self._screen_height_factor,
                 scale,
                 foreground,
                 background,
@@ -243,14 +275,15 @@ class Renderer:
         """
         Draws a rectangle anchored in 2d space.
         X, y, width, and height uses screen-space coordinates, i.e. 0.1 is 10% of the screen width/height.
+        Use `set_resolution` to change to pixel coordinates.
         """
 
         self.draw(
             flat.Rect2D(
-                x,
-                y,
-                width,
-                height,
+                x * self._screen_width_factor,
+                y * self._screen_height_factor,
+                width * self._screen_width_factor,
+                height * self._screen_height_factor,
                 color,
                 h_align,
                 v_align,
@@ -269,13 +302,14 @@ class Renderer:
         """
         Draws a rectangle anchored in 3d space.
         Width and height are screen-space sizes, i.e. 0.1 is 10% of the screen width/height.
+        Use `set_resolution` to change to pixel coordinates.
         The size does not change based on distance to the camera.
         """
         self.draw(
             flat.Rect3D(
                 _get_anchor(anchor),
-                width,
-                height,
+                width * self._screen_width_factor,
+                height * self._screen_height_factor,
                 color,
                 h_align,
                 v_align,
