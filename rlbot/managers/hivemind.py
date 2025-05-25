@@ -14,6 +14,8 @@ from rlbot.managers import Renderer
 from rlbot.utils import fill_desired_game_state
 from rlbot.utils.logging import DEFAULT_LOGGER, get_logger
 
+WARNED_SPAWN_ID_DEPRECATED = False
+
 
 class Hivemind:
     """
@@ -30,7 +32,18 @@ class Hivemind:
     team: int = -1
     indices: list[int] = []
     names: list[str] = []
-    spawn_ids: list[int] = []
+    player_ids: list[int] = []
+
+    @property
+    def spawn_ids(self) -> list[int]:
+        global WARNED_SPAWN_ID_DEPRECATED
+        if not WARNED_SPAWN_ID_DEPRECATED:
+            WARNED_SPAWN_ID_DEPRECATED = True
+            self._logger.warning(
+                "'spawn_id' getter accessed, which is deprecated in favor of 'player_id'."
+            )
+
+        return self.player_ids
 
     match_config = flat.MatchConfiguration()
     """
@@ -92,9 +105,9 @@ class Hivemind:
             return
 
         # Search match settings for our spawn ids
-        for spawn_id in self.spawn_ids:
+        for player_id in self.player_ids:
             for player in self.match_config.player_configurations:
-                if player.spawn_id == spawn_id:
+                if player.player_id == player_id:
                     self.names.append(player.name)
                     self.loggers.append(get_logger(player.name))
                     break
@@ -111,7 +124,7 @@ class Hivemind:
             exit()
 
         self._initialized_bot = True
-        self._game_interface.send_init_complete()
+        self._game_interface.send_msg(flat.InitComplete())
 
     def _handle_match_config(self, match_config: flat.MatchConfiguration):
         self.match_config = match_config
@@ -128,7 +141,7 @@ class Hivemind:
     ):
         self.team = player_mappings.team
         for controllable in player_mappings.controllables:
-            self.spawn_ids.append(controllable.spawn_id)
+            self.player_ids.append(controllable.identifier)
             self.indices.append(controllable.index)
 
         self._has_player_mapping = True
@@ -166,7 +179,7 @@ class Hivemind:
                     ", ".join(map(str, self.indices)),
                 )
             player_input = flat.PlayerInput(index, controller)
-            self._game_interface.send_player_input(player_input)
+            self._game_interface.send_msg(player_input)
 
     def _run(self):
         running = True
@@ -251,7 +264,7 @@ class Hivemind:
         - `display`: The message to be displayed in the game in "quick chat", or `None` to display nothing.
         - `team_only`: If True, only your team will receive the message.
         """
-        self._game_interface.send_match_comm(
+        self._game_interface.send_msg(
             flat.MatchComm(
                 index,
                 self.team,
@@ -275,7 +288,7 @@ class Hivemind:
         """
 
         game_state = fill_desired_game_state(balls, cars, match_info, commands)
-        self._game_interface.send_game_state(game_state)
+        self._game_interface.send_msg(game_state)
 
     def set_loadout(self, loadout: flat.PlayerLoadout, index: int):
         """
@@ -284,7 +297,7 @@ class Hivemind:
         Does nothing if called outside `initialize` unless state setting is enabled in which case it
         respawns the car with the new loadout.
         """
-        self._game_interface.send_set_loadout(flat.SetLoadout(index, loadout))
+        self._game_interface.send_msg(flat.SetLoadout(index, loadout))
 
     def initialize(self):
         """

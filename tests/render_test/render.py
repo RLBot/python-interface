@@ -30,10 +30,12 @@ class RenderFun(Script):
 
             self.do_render(radius)
 
-        self.renderer.begin_rendering('tick')
-        hsv = self.renderer.create_color_hsv(packet.match_info.seconds_elapsed * 0.1, 1.0, 1.0)
+        self.renderer.begin_rendering("tick")
+        hsv = self.renderer.create_color_hsv(
+            packet.match_info.seconds_elapsed * 0.1, 1.0, 1.0
+        )
         self.renderer.set_resolution(1920, 1080)
-        self.renderer.draw_string_2d('HSV 300px 50px', 300, 50, 1.0, hsv)
+        self.renderer.draw_string_2d("HSV 300px 50px", 300, 50, 1.0, hsv)
         self.renderer.set_resolution(1, 1)
         self.renderer.end_rendering()
 
@@ -74,9 +76,7 @@ class RenderFun(Script):
             CarAnchor(0, Vector3(200, 0, 0)), 0.02, 0.02, self.renderer.blue
         )
 
-        self.renderer.draw_rect_2d(
-            0.75, 0.75, 0.1, 0.1, Color(150, 30, 100), centered=False
-        )
+        self.renderer.draw_rect_2d(0.75, 0.75, 0.1, 0.1, Color(150, 30, 100))
         self.renderer.draw_rect_2d(0.75, 0.75, 0.1, 0.1, self.renderer.black)
         for hkey, h in {
             "left": flat.TextHAlign.Left,
