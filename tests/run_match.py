@@ -10,14 +10,10 @@ MATCH_CONFIG_PATH = DIR / "human_vs_atba.toml"
 RLBOT_SERVER_FOLDER = DIR / "../../core/RLBotCS/bin/Release/"
 
 if __name__ == "__main__":
-    match_manager = MatchManager(RLBOT_SERVER_FOLDER)
+    with MatchManager(RLBOT_SERVER_FOLDER) as man:
+        man.start_match(MATCH_CONFIG_PATH)
+        assert man.packet is not None
 
-    match_manager.start_match(MATCH_CONFIG_PATH)
-    assert match_manager.packet is not None
-
-    try:
         # wait for the match to end
-        while match_manager.packet.match_info.match_phase != flat.MatchPhase.Ended:
+        while man.packet.match_info.match_phase != flat.MatchPhase.Ended:
             sleep(1.0)
-    finally:
-        match_manager.shut_down()

@@ -1,5 +1,6 @@
 import math
 from collections.abc import Callable, Sequence
+from contextlib import contextmanager
 from typing import Optional
 
 from rlbot import flat
@@ -51,6 +52,8 @@ class Renderer:
     _group_id: Optional[int] = None
     _current_renders: list[flat.RenderMessage] = []
 
+    _default_color = white
+
     _screen_width_factor = 1.0
     _screen_height_factor = 1.0
 
@@ -71,6 +74,12 @@ class Renderer:
         """
         self._screen_width_factor = 1.0 / screen_width
         self._screen_height_factor = 1.0 / screen_height
+
+    def set_default_color(self, color: flat.Color):
+        """
+        Set which color to use when no other color is provided.
+        """
+        self._default_color = color
 
     @staticmethod
     def create_color(red: int, green: int, blue: int, alpha: int = 255) -> flat.Color:
@@ -110,6 +119,30 @@ class Renderer:
     @staticmethod
     def _get_group_id(group_id: str) -> int:
         return hash(str(group_id).encode("utf-8")) % MAX_INT
+
+    @contextmanager
+    def context(self, group_id: str=DEFAULT_GROUP_ID, default_color=None):
+        """
+        Starts rendering as a context usable in with-statements.
+        After the with-statement the rendering is automatically ended.
+        Note, the is not possible to have two nested renderings started.
+
+        Example:
+
+        ```
+        with renderer.context(default_color=renderer.red):
+            renderer.draw_line_3d(car.pos, ball.pos)
+            renderer.draw_line_3d(car.pos, goal.pos)
+            renderer.draw_line_3d(ball.pos, goal.pos)
+        ```
+        """
+        try:
+            self.begin_rendering(group_id)
+            if default_color:
+                self.set_default_color(default_color)
+            yield
+        finally:
+            self.end_rendering()
 
     def begin_rendering(self, group_id: str = DEFAULT_GROUP_ID):
         """
@@ -189,29 +222,29 @@ class Renderer:
         self,
         start: flat.RenderAnchor | flat.BallAnchor | flat.CarAnchor | flat.Vector3,
         end: flat.RenderAnchor | flat.BallAnchor | flat.CarAnchor | flat.Vector3,
-        color: flat.Color,
+        color: flat.Color | None = None,
     ):
         """
         Draws a line between two anchors in 3d space.
         """
-        self.draw(flat.Line3D(_get_anchor(start), _get_anchor(end), color))
+        self.draw(flat.Line3D(_get_anchor(start), _get_anchor(end), color or self._default_color))
 
     def draw_polyline_3d(
         self,
         points: Sequence[flat.Vector3],
-        color: flat.Color,
+        color: flat.Color | None = None,
     ):
         """
         Draws a line going through each of the provided points.
         """
-        self.draw(flat.PolyLine3D(points, color))
+        self.draw(flat.PolyLine3D(points, color or self._default_color))
 
     def draw_string_3d(
         self,
         text: str,
         anchor: flat.RenderAnchor | flat.BallAnchor | flat.CarAnchor | flat.Vector3,
         scale: float,
-        foreground: flat.Color,
+        foreground: flat.Color | None = None,
         background: flat.Color = flat.Color(a=0),
         h_align: flat.TextHAlign = flat.TextHAlign.Left,
         v_align: flat.TextVAlign = flat.TextVAlign.Top,
@@ -225,7 +258,7 @@ class Renderer:
                 text,
                 _get_anchor(anchor),
                 scale,
-                foreground,
+                foreground or self._default_color,
                 background,
                 h_align,
                 v_align,
@@ -238,7 +271,7 @@ class Renderer:
         x: float,
         y: float,
         scale: float,
-        foreground: flat.Color,
+        foreground: flat.Color | None = None,
         background: flat.Color = flat.Color(a=0),
         h_align: flat.TextHAlign = flat.TextHAlign.Left,
         v_align: flat.TextVAlign = flat.TextVAlign.Top,
@@ -255,7 +288,7 @@ class Renderer:
                 x * self._screen_width_factor,
                 y * self._screen_height_factor,
                 scale,
-                foreground,
+                foreground or self._default_color,
                 background,
                 h_align,
                 v_align,
@@ -268,7 +301,7 @@ class Renderer:
         y: float,
         width: float,
         height: float,
-        color: flat.Color,
+        color: flat.Color | None = None,
         h_align: flat.TextHAlign = flat.TextHAlign.Left,
         v_align: flat.TextVAlign = flat.TextVAlign.Top,
     ):
@@ -284,7 +317,7 @@ class Renderer:
                 y * self._screen_height_factor,
                 width * self._screen_width_factor,
                 height * self._screen_height_factor,
-                color,
+                color or self._default_color,
                 h_align,
                 v_align,
             )
@@ -295,7 +328,7 @@ class Renderer:
         anchor: flat.RenderAnchor | flat.BallAnchor | flat.CarAnchor | flat.Vector3,
         width: float,
         height: float,
-        color: flat.Color,
+        color: flat.Color | None = None,
         h_align: flat.TextHAlign = flat.TextHAlign.Left,
         v_align: flat.TextVAlign = flat.TextVAlign.Top,
     ):
@@ -310,7 +343,7 @@ class Renderer:
                 _get_anchor(anchor),
                 width * self._screen_width_factor,
                 height * self._screen_height_factor,
-                color,
+                color or self._default_color,
                 h_align,
                 v_align,
             )

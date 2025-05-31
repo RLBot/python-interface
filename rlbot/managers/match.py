@@ -33,6 +33,12 @@ class MatchManager:
         self.rlbot_interface: SocketRelay = SocketRelay("")
         self.rlbot_interface.packet_handlers.append(self._packet_reporter)
 
+    def __enter__(self) -> 'MatchManager':
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+        self.disconnect()
+
     def ensure_server_started(self):
         """
         Ensures that RLBotServer is running, starting it if it is not.
