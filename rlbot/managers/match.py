@@ -34,7 +34,6 @@ class MatchManager:
         self.rlbot_interface.packet_handlers.append(self._packet_reporter)
 
     def __enter__(self) -> 'MatchManager':
-        self.ensure_server_started()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
