@@ -14,13 +14,11 @@ if __name__ == "__main__":
         match_config_path = Path(sys.argv[1])
     assert match_config_path.exists(), f"Match config not found: {match_config_path}"
 
-    # start the match
-    match_manager = MatchManager(RLBOT_SERVER_FOLDER)
-    match_manager.start_match(match_config_path, False)
+    with MatchManager(RLBOT_SERVER_FOLDER) as man:
+        man.start_match(match_config_path, False)
 
-    # wait
-    input("\nPress enter to end the match: ")
+        # Wait for input
+        input("\nPress enter to end the match: ")
 
-    # end the match and disconnect
-    match_manager.stop_match()
-    match_manager.disconnect()
+        # End the match
+        man.stop_match()
