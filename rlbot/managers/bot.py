@@ -105,10 +105,12 @@ class Bot:
 
         # Search match settings for our name
         for player in self.match_config.player_configurations:
-            if player.player_id == self.player_id:
-                self.name = player.name
-                self.logger = get_logger(self.name)
-                break
+            match player.variety.item:
+                case flat.CustomBot(name):
+                    if player.player_id == self.player_id:
+                        self.name = name
+                        self.logger = get_logger(self.name)
+                        break
 
         try:
             self.initialize()

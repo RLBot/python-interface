@@ -94,29 +94,27 @@ def load_match_config(config_path: Path | str) -> flat.MatchConfiguration:
 
         match variant:
             case "rlbot":
-                variety, use_config = flat.CustomBot(), True
+                abs_config_path = (config_path.parent / car_config).resolve()
+                players.append(
+                    load_player_config(abs_config_path, team, name, loadout_file)
+                )
             case "psyonix":
-                variety, use_config = flat.Psyonix(skill), True
+                abs_config_path = (config_path.parent / car_config).resolve()
+                players.append(
+                    load_psyonix_config(
+                        team,
+                        skill,
+                        name,
+                        loadout_file,
+                        abs_config_path,
+                    )
+                )
             case "human":
-                variety, use_config = flat.Human(), False
-            case "partymember":
-                logger.warning("PartyMember player type is not supported yet.")
-                variety, use_config = flat.PartyMember(), False
+                players.append(flat.PlayerConfiguration(flat.Human(), team, 0))
             case t:
                 raise ConfigParsingException(
                     f"Invalid player type {repr(t)} for player {len(players)}."
                 )
-
-        if use_config and car_config:
-            abs_config_path = (config_path.parent / car_config).resolve()
-            players.append(
-                load_player_config(abs_config_path, variety, team, name, loadout_file)  # type: ignore
-            )
-        else:
-            loadout = load_player_loadout(loadout_file, team) if loadout_file else None
-            players.append(
-                flat.PlayerConfiguration(variety, name, team, loadout=loadout)
-            )
 
     scripts: list[flat.ScriptConfiguration] = []
     for script_table in config.get("scripts", []):
@@ -170,7 +168,9 @@ def load_match_config(config_path: Path | str) -> flat.MatchConfiguration:
         existing_match_behavior=__enum(
             match_table, "existing_match_behavior", flat.ExistingMatchBehavior
         ),
-        enable_rendering=__bool(match_table, "enable_rendering"),
+        enable_rendering=__enum(
+            match_table, "enable_rendering", flat.DebugRendering.OffByDefault
+        ),
         enable_state_setting=__bool(match_table, "enable_state_setting"),
         freeplay=__bool(match_table, "freeplay"),
     )
@@ -217,8 +217,7 @@ def load_player_loadout(path: Path | str, team: int) -> flat.PlayerLoadout:
 
 
 def load_player_config(
-    path: Path | str | None,
-    type: flat.CustomBot | flat.Psyonix,
+    path: Path | str,
     team: int,
     name_override: str | None = None,
     loadout_override: Path | str | None = None,
@@ -227,20 +226,6 @@ def load_player_config(
     Reads the bot toml file at the provided path and
     creates a `PlayerConfiguration` of the given type for the given team.
     """
-    if path is None:
-        loadout = (
-            load_player_loadout(loadout_override, team)
-            if loadout_override is not None
-            else None
-        )
-
-        return flat.PlayerConfiguration(
-            type,
-            name_override or "",
-            team,
-            loadout=loadout,
-        )
-
     path = Path(path)
     with open(path, "rb") as f:
         config = tomllib.load(f)
@@ -266,15 +251,64 @@ def load_player_config(
     )
 
     return flat.PlayerConfiguration(
-        type,
-        name_override or __str(settings, "name"),
+        flat.CustomBot(
+            name_override or __str(settings, "name"),
+            str(root_dir),
+            run_command,
+            loadout,
+            __str(settings, "agent_id"),
+            __bool(settings, "hivemind"),
+        ),
         team,
-        str(root_dir),
-        run_command,
-        loadout,
         0,
-        __str(settings, "agent_id"),
-        __bool(settings, "hivemind"),
+    )
+
+
+def load_psyonix_config(
+    team: int,
+    skill_level: flat.PsyonixSkill,
+    name_override: str | None = None,
+    loadout_override: Path | str | None = None,
+    path: Path | str | None = None,
+) -> flat.PlayerConfiguration:
+    """
+    Creates a `PlayerConfiguration` for a Psyonix bot of the given team and skill.
+    If a path is provided, it will be used override the default name and loadout.
+    """
+    name = name_override
+    loadout_path = loadout_override
+
+    # Don't parse the toml file if we have no data we need to extract,
+    # even if a path to a toml file is provided.
+    if path is not None and (name is None or loadout_path is None):
+        path = Path(path)
+        with open(path, "rb") as f:
+            config = tomllib.load(f)
+
+            settings = __table(config, "settings")
+
+            if name is None:
+                name = __str(settings, "name")
+
+            if loadout_path is None:
+                loadout_path = (
+                    path.parent / Path(__str(settings, "loadout_file"))
+                    if "loadout_file" in settings
+                    else None
+                )
+
+    loadout = (
+        load_player_loadout(loadout_path, team) if loadout_path is not None else None
+    )
+
+    return flat.PlayerConfiguration(
+        flat.PsyonixBot(
+            name or "",
+            loadout,
+            skill_level,
+        ),
+        team,
+        0,
     )
 
 

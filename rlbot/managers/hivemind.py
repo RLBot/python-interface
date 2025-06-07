@@ -107,10 +107,12 @@ class Hivemind:
         # Search match settings for our spawn ids
         for player_id in self.player_ids:
             for player in self.match_config.player_configurations:
-                if player.player_id == player_id:
-                    self.names.append(player.name)
-                    self.loggers.append(get_logger(player.name))
-                    break
+                match player.variety.item:
+                    case flat.CustomBot(name):
+                        if player.player_id == player_id:
+                            self.names.append(name)
+                            self.loggers.append(get_logger(name))
+                            break
 
         try:
             self.initialize()
