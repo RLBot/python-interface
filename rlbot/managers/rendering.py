@@ -154,6 +154,7 @@ class Renderer:
             )
             return
 
+        self._current_renders.clear()
         self._group_id = Renderer._get_group_id(group_id)
         self._used_group_ids.add(self._group_id)
 
