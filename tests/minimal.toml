@@ -3,5 +3,5 @@
 launcher = "Steam"
 
 [match]
-game_mode = "Soccer"
+game_mode = "Soccar"
 game_map_upk = "Stadium_P"

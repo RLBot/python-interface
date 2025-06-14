@@ -17,13 +17,13 @@ if __name__ == "__main__":
 
     current_map = -1
 
-    blue_bot = load_player_config(BOT_PATH, flat.CustomBot(), 0)
-    orange_bot = load_player_config(BOT_PATH, flat.CustomBot(), 1)
+    blue_bot = load_player_config(BOT_PATH, 0)
+    orange_bot = load_player_config(BOT_PATH, 1)
 
     match_settings = flat.MatchConfiguration(
         launcher=flat.Launcher.Steam,
         auto_start_agents=True,
-        game_mode=flat.GameMode.Soccer,
+        game_mode=flat.GameMode.Soccar,
         enable_state_setting=True,
         existing_match_behavior=flat.ExistingMatchBehavior.Restart,
         skip_replays=True,

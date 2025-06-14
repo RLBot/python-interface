@@ -2,7 +2,7 @@
 launcher = "Steam"
 
 [match]
-game_mode = "Soccer"
+game_mode = "Soccar"
 game_map_upk = "Park_Bman_P"
 
 [mutators]

@@ -5,6 +5,7 @@ import numpy as np
 import torch
 from agent import Agent
 from nexto_obs import BOOST_LOCATIONS, NextoObsBuilder
+from rlbot_flatbuffers import GameMode
 from rlgym_compat.v1_game_state import V1GameState as GameState
 
 from rlbot.flat import ControllerState, GamePacket, MatchPhase, Vector3
@@ -37,10 +38,10 @@ KICKOFF_NUMPY = np.array(
 )
 
 GAME_MODES = [
-    "soccer",
+    "soccar",
     "hoops",
     "dropshot",
-    "hockey",
+    "snowday",
     "rumble",
     "heatseeker",
 ]
@@ -63,7 +64,7 @@ class Nexto(Bot):
     ticks = tick_skip  # So we take an action the first tick
     prev_tick = 0
     kickoff_index = -1
-    gamemode = ""
+    gamemode = GameMode.Soccar
 
     # toxic handling
     orange_goals = 0
@@ -95,10 +96,7 @@ class Nexto(Bot):
             "Also check out the RLGym Twitch stream to watch live bot training and occasional showmatches!"
         )
 
-        game_mode_idx = int(self.match_config.game_mode)
-        self.gamemode = (
-            GAME_MODES[game_mode_idx] if game_mode_idx < len(GAME_MODES) else 0
-        )
+        self.gamemode = self.match_config.game_mode
 
     def render_attention_weights(self, weights, positions, n=3):
         if weights is None:
@@ -171,8 +169,7 @@ class Nexto(Bot):
 
             self.game_state.players = [player] + teammates + opponents
 
-            # todo add heatseeker later
-            if self.gamemode == "heatseeker":
+            if self.gamemode == GameMode.Heatseeker:
                 self._modify_ball_info_for_heatseeker(packet, self.game_state)
 
             obs = self.obs_builder.build_obs(player, self.game_state, self.action)
@@ -263,7 +260,7 @@ class Nexto(Bot):
         self.controls.jump = action[5] > 0
         self.controls.boost = action[6] > 0
         self.controls.handbrake = action[7] > 0
-        if self.gamemode == "rumble":
+        if self.gamemode == GameMode.Rumble:
             self.controls.use_item = np.random.random() > (
                 self.tick_skip / 1200
             )  # On average once every 10 seconds

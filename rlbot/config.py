@@ -99,7 +99,9 @@ def load_match_config(config_path: Path | str) -> flat.MatchConfiguration:
                     load_player_config(abs_config_path, team, name, loadout_file)
                 )
             case "psyonix":
-                abs_config_path = (config_path.parent / car_config).resolve()
+                abs_config_path = (
+                    (config_path.parent / car_config).resolve() if car_config else None
+                )
                 players.append(
                     load_psyonix_config(
                         team,
@@ -153,6 +155,17 @@ def load_match_config(config_path: Path | str) -> flat.MatchConfiguration:
         audio=__enum(mutator_table, "audio", flat.AudioMutator),
     )
 
+    try:
+        enable_rendering = (
+            flat.DebugRendering.OnByDefault
+            if __bool(match_table, "enable_rendering")
+            else flat.DebugRendering.OffByDefault
+        )
+    except ConfigParsingException:
+        enable_rendering = __enum(
+            match_table, "enable_rendering", flat.DebugRendering.AlwaysOff
+        )
+
     return flat.MatchConfiguration(
         launcher=__enum(rlbot_table, "launcher", flat.Launcher),
         launcher_arg=__str(rlbot_table, "launcher_arg"),
@@ -168,9 +181,7 @@ def load_match_config(config_path: Path | str) -> flat.MatchConfiguration:
         existing_match_behavior=__enum(
             match_table, "existing_match_behavior", flat.ExistingMatchBehavior
         ),
-        enable_rendering=__enum(
-            match_table, "enable_rendering", flat.DebugRendering.OffByDefault
-        ),
+        enable_rendering=enable_rendering,
         enable_state_setting=__bool(match_table, "enable_state_setting"),
         freeplay=__bool(match_table, "freeplay"),
     )
