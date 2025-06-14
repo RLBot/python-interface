@@ -26,6 +26,7 @@ class Script:
 
     index: int = 0
     name: str = "UnknownScript"
+    can_render: bool = False
 
     match_config = flat.MatchConfiguration()
     field_info = flat.FieldInfo()
@@ -59,6 +60,9 @@ class Script:
             self._handle_ball_prediction
         )
         self._game_interface.packet_handlers.append(self._handle_packet)
+        self._game_interface.rendering_status_handlers.append(
+            self.rendering_status_update
+        )
 
         self.renderer = Renderer(self._game_interface)
 
@@ -88,12 +92,15 @@ class Script:
 
     def _handle_match_config(self, match_config: flat.MatchConfiguration):
         self.match_config = match_config
+        self._has_match_settings = True
+        self.can_render = (
+            match_config.enable_rendering == flat.DebugRendering.OnByDefault
+        )
 
         for i, script in enumerate(match_config.script_configurations):
             if script.agent_id == self._game_interface.agent_id:
                 self.index = i
                 self.name = script.name
-                self._has_match_settings = True
                 break
         else:  # else block runs if break was not hit
             self.logger.warning(
@@ -178,6 +185,34 @@ class Script:
             match_comm.content,
             match_comm.display,
             match_comm.team_only,
+        )
+
+    def rendering_status_update(self, update: flat.RenderingStatus):
+        """
+        Called when the server sends a rendering status update for ANY bot or script.
+
+        By default, this will update `self.can_render` if appropriate.
+        """
+        if not update.is_bot and update.index == self.index:
+            self.can_render = update.status
+
+    def update_rendering_status(
+        self,
+        status: bool,
+        index: Optional[int] = None,
+        is_bot: bool = False,
+    ):
+        """
+        Requests the server to update the status of the ability for this bot to render.
+        Will be ignored if rendering has been set to AlwaysOff in the match settings.
+        If the status is successfully updated, the `self.rendering_status_update` method will be called which will update `self.can_render`.
+
+        - `status`: `True` to enable rendering, `False` to disable.
+        - `index`: The index of the bot to update. If `None`, uses the script's own index.
+        - `is_bot`: `True` if `index` is a bot index, `False` if it is a script index.
+        """
+        self._game_interface.send_msg(
+            flat.RenderingStatus(self.index if index is None else index, is_bot, status)
         )
 
     def handle_match_comm(

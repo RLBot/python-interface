@@ -45,6 +45,7 @@ class SocketRelay:
     controllable_team_info_handlers: list[
         Callable[[flat.ControllableTeamInfo], None]
     ] = []
+    rendering_status_handlers: list[Callable[[flat.RenderingStatus], None]] = []
     raw_handlers: list[Callable[[flat.CoreMessage], None]] = []
 
     def __init__(
@@ -114,12 +115,10 @@ class SocketRelay:
             | flat.StopCommand
             | flat.SetLoadout
             | flat.InitComplete
+            | flat.RenderingStatus
         ),
     ):
         self.send_bytes(flat.InterfacePacket(msg).pack())
-
-    def remove_render_group(self, group_id: int):
-        self.send_msg(flat.RemoveRenderGroup(group_id))
 
     def stop_match(self, shutdown_server: bool = False):
         self.send_msg(flat.StopCommand(shutdown_server))
@@ -298,6 +297,9 @@ class SocketRelay:
             case flat.ControllableTeamInfo() as controllable_team_info:
                 for handler in self.controllable_team_info_handlers:
                     handler(controllable_team_info)
+            case flat.RenderingStatus() as rendering_status:
+                for handler in self.rendering_status_handlers:
+                    handler(rendering_status)
             case _:
                 self.logger.warning(
                     "Received unknown message type: %s",

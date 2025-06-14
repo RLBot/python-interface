@@ -33,6 +33,7 @@ class Hivemind:
     indices: list[int] = []
     names: list[str] = []
     player_ids: list[int] = []
+    can_render: bool = False
 
     @property
     def spawn_ids(self) -> list[int]:
@@ -92,6 +93,9 @@ class Hivemind:
             self._handle_controllable_team_info
         )
         self._game_interface.packet_handlers.append(self._handle_packet)
+        self._game_interface.rendering_status_handlers.append(
+            self.rendering_status_update
+        )
 
         self.renderer = Renderer(self._game_interface)
 
@@ -103,16 +107,6 @@ class Hivemind:
             or not self._has_player_mapping
         ):
             return
-
-        # Search match settings for our spawn ids
-        for player_id in self.player_ids:
-            for player in self.match_config.player_configurations:
-                match player.variety.item:
-                    case flat.CustomBot(name):
-                        if player.player_id == player_id:
-                            self.names.append(name)
-                            self.loggers.append(get_logger(name))
-                            break
 
         try:
             self.initialize()
@@ -131,6 +125,17 @@ class Hivemind:
     def _handle_match_config(self, match_config: flat.MatchConfiguration):
         self.match_config = match_config
         self._has_match_settings = True
+
+        # Search match settings for our spawn ids
+        for player_id in self.player_ids:
+            for player in self.match_config.player_configurations:
+                match player.variety.item:
+                    case flat.CustomBot(name):
+                        if player.player_id == player_id:
+                            self.names.append(name)
+                            self.loggers.append(get_logger(name))
+                            break
+
         self._try_initialize()
 
     def _handle_field_info(self, field_info: flat.FieldInfo):
@@ -228,6 +233,36 @@ class Hivemind:
         finally:
             self.retire()
             del self._game_interface
+
+    def rendering_status_update(self, update: flat.RenderingStatus):
+        """
+        Called when the server sends a rendering status update for ANY bot or script.
+
+        By default, this will update `self.can_render` if appropriate.
+        """
+        if update.is_bot and update.index in self.indices:
+            self.can_render = update.status
+
+    def update_rendering_status(
+        self,
+        status: bool,
+        index: Optional[int] = None,
+        is_bot: bool = True,
+    ):
+        """
+        Requests the server to update the status of the ability for this bot to render.
+        Will be ignored if rendering has been set to AlwaysOff in the match settings.
+        If the status is successfully updated, the `self.rendering_status_update` method will be called which will update `self.can_render`.
+
+        - `status`: `True` to enable rendering, `False` to disable.
+        - `index`: The index of the bot to update. If `None`, uses the bot's own index.
+        - `is_bot`: `True` if `index` is a bot index, `False` if it is a script index.
+        """
+        self._game_interface.send_msg(
+            flat.RenderingStatus(
+                self.indices[0] if index is None else index, is_bot, status
+            )
+        )
 
     def _handle_match_communication(self, match_comm: flat.MatchComm):
         self.handle_match_comm(

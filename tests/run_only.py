@@ -5,7 +5,7 @@ from rlbot.managers import MatchManager
 
 DIR = Path(__file__).parent
 
-MATCH_CONFIG_PATH = DIR / "human_vs_necto.toml"
+MATCH_CONFIG_PATH = DIR / "render_test.toml"
 RLBOT_SERVER_FOLDER = DIR / "../"
 
 if __name__ == "__main__":

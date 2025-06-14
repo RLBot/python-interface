@@ -31,6 +31,7 @@ class Bot:
     index: int = -1
     name: str = ""
     player_id: int = 0
+    can_render: bool = False
 
     @property
     def spawn_id(self) -> int:
@@ -90,6 +91,9 @@ class Bot:
             self._handle_controllable_team_info
         )
         self._game_interface.packet_handlers.append(self._handle_packet)
+        self._game_interface.rendering_status_handlers.append(
+            self.rendering_status_update
+        )
 
         self.renderer = Renderer(self._game_interface)
 
@@ -102,15 +106,6 @@ class Bot:
         ):
             # Not ready to initialize
             return
-
-        # Search match settings for our name
-        for player in self.match_config.player_configurations:
-            match player.variety.item:
-                case flat.CustomBot(name):
-                    if player.player_id == self.player_id:
-                        self.name = name
-                        self.logger = get_logger(self.name)
-                        break
 
         try:
             self.initialize()
@@ -127,6 +122,24 @@ class Bot:
     def _handle_match_config(self, match_config: flat.MatchConfiguration):
         self.match_config = match_config
         self._has_match_settings = True
+        self.can_render = (
+            match_config.enable_rendering == flat.DebugRendering.OnByDefault
+        )
+
+        # Search match settings for our name
+        for player in self.match_config.player_configurations:
+            match player.variety.item:
+                case flat.CustomBot(name):
+                    if player.player_id == self.player_id:
+                        self.name = name
+                        self.logger = get_logger(self.name)
+                        break
+        else:  # else block runs if break was not hit
+            self.logger.warning(
+                "Bot with agent id '%s' did not find itself in the match settings",
+                self._game_interface.agent_id,
+            )
+
         self._try_initialize()
 
     def _handle_field_info(self, field_info: flat.FieldInfo):
@@ -226,6 +239,34 @@ class Bot:
             match_comm.content,
             match_comm.display,
             match_comm.team_only,
+        )
+
+    def rendering_status_update(self, update: flat.RenderingStatus):
+        """
+        Called when the server sends a rendering status update for ANY bot or script.
+
+        By default, this will update `self.can_render` if appropriate.
+        """
+        if update.is_bot and update.index == self.index:
+            self.can_render = update.status
+
+    def update_rendering_status(
+        self,
+        status: bool,
+        index: Optional[int] = None,
+        is_bot: bool = True,
+    ):
+        """
+        Requests the server to update the status of the ability for this bot to render.
+        Will be ignored if rendering has been set to AlwaysOff in the match settings.
+        If the status is successfully updated, the `self.rendering_status_update` method will be called which will update `self.can_render`.
+
+        - `status`: `True` to enable rendering, `False` to disable.
+        - `index`: The index of the bot to update. If `None`, uses the bot's own index.
+        - `is_bot`: `True` if `index` is a bot index, `False` if it is a script index.
+        """
+        self._game_interface.send_msg(
+            flat.RenderingStatus(self.index if index is None else index, is_bot, status)
         )
 
     def handle_match_comm(

@@ -8,6 +8,9 @@ class RenderFun(Script):
     last_state = flat.MatchPhase.Inactive
     player_count = 0
 
+    def initialize(self):
+        self.update_rendering_status(True)
+
     def handle_packet(self, packet: flat.GamePacket):
         if (
             packet.match_info.match_phase != flat.MatchPhase.Replay

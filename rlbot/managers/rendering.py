@@ -55,10 +55,8 @@ class Renderer:
     _screen_height_factor = 1.0
 
     def __init__(self, game_interface: SocketRelay):
-        self._render_group: Callable[[flat.RenderGroup], None] = game_interface.send_msg
-
-        self._remove_render_group: Callable[[int], None] = (
-            game_interface.remove_render_group
+        self._send_msg: Callable[[flat.RenderGroup | flat.RemoveRenderGroup], None] = (
+            game_interface.send_msg
         )
 
     def set_resolution(self, screen_width: float, screen_height: float):
@@ -141,7 +139,7 @@ class Renderer:
                 )
             return
 
-        self._render_group(flat.RenderGroup(self._current_renders, self._group_id))
+        self._send_msg(flat.RenderGroup(self._current_renders, self._group_id))
         self._current_renders.clear()
         self._group_id = None
 
@@ -151,7 +149,7 @@ class Renderer:
         Note: It is not possible to clear render groups of other bots.
         """
         group_id_hash = Renderer._get_group_id(group_id)
-        self._remove_render_group(group_id_hash)
+        self._send_msg(flat.RemoveRenderGroup(group_id_hash))
         self._used_group_ids.discard(group_id_hash)
 
     def clear_all_render_groups(self):
@@ -160,7 +158,7 @@ class Renderer:
         Note: This does not clear render groups created by other bots.
         """
         for group_id in self._used_group_ids:
-            self._remove_render_group(group_id)
+            self._send_msg(flat.RemoveRenderGroup(group_id))
         self._used_group_ids.clear()
 
     def is_rendering(self):
