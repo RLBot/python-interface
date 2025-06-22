@@ -123,7 +123,7 @@ class Renderer:
         return hash(str(group_id).encode("utf-8")) % MAX_INT
 
     @contextmanager
-    def context(self, group_id: str=DEFAULT_GROUP_ID, default_color=None):
+    def context(self, group_id: str = DEFAULT_GROUP_ID, default_color=None):
         """
         Starts rendering as a context usable in with-statements.
         After the with-statement the rendering is automatically ended.
@@ -230,7 +230,11 @@ class Renderer:
         """
         Draws a line between two anchors in 3d space.
         """
-        self.draw(flat.Line3D(_get_anchor(start), _get_anchor(end), color or self._default_color))
+        self.draw(
+            flat.Line3D(
+                _get_anchor(start), _get_anchor(end), color or self._default_color
+            )
+        )
 
     def draw_polyline_3d(
         self,

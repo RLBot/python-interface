@@ -83,6 +83,7 @@ GAME_MAP_TO_UPK = {
     "Neotokyo_Arcade": "NeoTokyo_Arcade_P",
     "FuturaGarden": "UF_Day_P",
     "DFHStadium_Anniversary": "stadium_10a_p",
+    "Holyfield": "Labs_Holyfield_Space_P",
 }
 
 STANDARD_MAPS = [
