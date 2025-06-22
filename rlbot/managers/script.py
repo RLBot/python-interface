@@ -130,6 +130,8 @@ class Script:
             self.logger.error(
                 "Script %s encountered an error to RLBot: %s", self.name, e
             )
+            if self.renderer.is_rendering():
+                self.renderer.end_rendering()
             print_exc()
 
     def _run(self):

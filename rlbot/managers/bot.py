@@ -179,6 +179,8 @@ class Bot:
                 e,
             )
             print_exc()
+            if self.renderer.is_rendering():
+                self.renderer.end_rendering()
             return
 
         player_input = flat.PlayerInput(self.index, controller)
