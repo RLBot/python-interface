@@ -46,6 +46,8 @@ class Renderer:
     purple = flat.Color(128, 0, 128)
     teal = flat.Color(0, 128, 128)
 
+    can_render: bool = False
+
     _logger = get_logger("renderer")
 
     _used_group_ids: set[int] = set()
@@ -58,12 +60,8 @@ class Renderer:
     _screen_height_factor = 1.0
 
     def __init__(self, game_interface: SocketRelay):
-        self._render_group: Callable[[flat.RenderGroup], None] = (
-            game_interface.send_render_group
-        )
-
-        self._remove_render_group: Callable[[int], None] = (
-            game_interface.remove_render_group
+        self._send_msg: Callable[[flat.RenderGroup | flat.RemoveRenderGroup], None] = (
+            game_interface.send_msg
         )
 
     def set_resolution(self, screen_width: float, screen_height: float):
@@ -94,12 +92,18 @@ class Renderer:
         t = value * (1 - (1 - f) * saturation)
 
         match i % 6:
-            case 0: r, g, b = value, t, p
-            case 1: r, g, b = q, value, p
-            case 2: r, g, b = p, value, t
-            case 3: r, g, b = p, q, value
-            case 4: r, g, b = t, p, value
-            case 5: r, g, b = value, p, q
+            case 0:
+                r, g, b = value, t, p
+            case 1:
+                r, g, b = q, value, p
+            case 2:
+                r, g, b = p, value, t
+            case 3:
+                r, g, b = p, q, value
+            case 4:
+                r, g, b = t, p, value
+            case 5:
+                r, g, b = value, p, q
 
         return flat.Color(math.floor(r * 255), math.floor(g * 255), math.floor(b * 255))
 
@@ -121,7 +125,7 @@ class Renderer:
         return hash(str(group_id).encode("utf-8")) % MAX_INT
 
     @contextmanager
-    def context(self, group_id: str=DEFAULT_GROUP_ID, default_color=None):
+    def context(self, group_id: str = DEFAULT_GROUP_ID, default_color=None):
         """
         Starts rendering as a context usable in with-statements.
         After the with-statement the rendering is automatically ended.
@@ -171,7 +175,7 @@ class Renderer:
                 )
             return
 
-        self._render_group(flat.RenderGroup(self._current_renders, self._group_id))
+        self._send_msg(flat.RenderGroup(self._current_renders, self._group_id))
         self._current_renders.clear()
         self._group_id = None
 
@@ -181,7 +185,7 @@ class Renderer:
         Note: It is not possible to clear render groups of other bots.
         """
         group_id_hash = Renderer._get_group_id(group_id)
-        self._remove_render_group(group_id_hash)
+        self._send_msg(flat.RemoveRenderGroup(group_id_hash))
         self._used_group_ids.discard(group_id_hash)
 
     def clear_all_render_groups(self):
@@ -190,7 +194,7 @@ class Renderer:
         Note: This does not clear render groups created by other bots.
         """
         for group_id in self._used_group_ids:
-            self._remove_render_group(group_id)
+            self._send_msg(flat.RemoveRenderGroup(group_id))
         self._used_group_ids.clear()
 
     def is_rendering(self):
@@ -228,7 +232,11 @@ class Renderer:
         """
         Draws a line between two anchors in 3d space.
         """
-        self.draw(flat.Line3D(_get_anchor(start), _get_anchor(end), color or self._default_color))
+        self.draw(
+            flat.Line3D(
+                _get_anchor(start), _get_anchor(end), color or self._default_color
+            )
+        )
 
     def draw_polyline_3d(
         self,

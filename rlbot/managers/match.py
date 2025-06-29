@@ -33,7 +33,7 @@ class MatchManager:
         self.rlbot_interface: SocketRelay = SocketRelay("")
         self.rlbot_interface.packet_handlers.append(self._packet_reporter)
 
-    def __enter__(self) -> 'MatchManager':
+    def __enter__(self) -> "MatchManager":
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
@@ -127,7 +127,7 @@ class MatchManager:
         self.rlbot_interface.start_match(config)
 
         if not self.initialized:
-            self.rlbot_interface.send_init_complete()
+            self.rlbot_interface.send_msg(flat.InitComplete())
             self.initialized = True
 
         if wait_for_start:
@@ -158,7 +158,7 @@ class MatchManager:
         """
 
         game_state = fill_desired_game_state(balls, cars, match_info, commands)
-        self.rlbot_interface.send_game_state(game_state)
+        self.rlbot_interface.send_msg(game_state)
 
     def shut_down(self, use_force_if_necessary: bool = True):
         """

@@ -13,6 +13,8 @@ from rlbot.managers.rendering import Renderer
 from rlbot.utils import fill_desired_game_state
 from rlbot.utils.logging import DEFAULT_LOGGER, get_logger
 
+WARNED_SPAWN_ID_DEPRECATED = False
+
 
 class Bot:
     """
@@ -28,7 +30,18 @@ class Bot:
     team: int = -1
     index: int = -1
     name: str = ""
-    spawn_id: int = 0
+    player_id: int = 0
+
+    @property
+    def spawn_id(self) -> int:
+        global WARNED_SPAWN_ID_DEPRECATED
+        if not WARNED_SPAWN_ID_DEPRECATED:
+            WARNED_SPAWN_ID_DEPRECATED = True
+            self.logger.warning(
+                "'spawn_id' getter accessed, which is deprecated in favor of 'player_id'."
+            )
+
+        return self.player_id
 
     match_config = flat.MatchConfiguration()
     """
@@ -77,6 +90,9 @@ class Bot:
             self._handle_controllable_team_info
         )
         self._game_interface.packet_handlers.append(self._handle_packet)
+        self._game_interface.rendering_status_handlers.append(
+            self.rendering_status_update
+        )
 
         self.renderer = Renderer(self._game_interface)
 
@@ -90,13 +106,6 @@ class Bot:
             # Not ready to initialize
             return
 
-        # Search match settings for our name
-        for player in self.match_config.player_configurations:
-            if player.spawn_id == self.spawn_id:
-                self.name = player.name
-                self.logger = get_logger(self.name)
-                break
-
         try:
             self.initialize()
         except Exception as e:
@@ -107,11 +116,29 @@ class Bot:
             exit()
 
         self._initialized_bot = True
-        self._game_interface.send_init_complete()
+        self._game_interface.send_msg(flat.InitComplete())
 
     def _handle_match_config(self, match_config: flat.MatchConfiguration):
         self.match_config = match_config
         self._has_match_settings = True
+        self.can_render = (
+            match_config.enable_rendering == flat.DebugRendering.OnByDefault
+        )
+
+        # Search match settings for our name
+        for player in self.match_config.player_configurations:
+            match player.variety.item:
+                case flat.CustomBot(name):
+                    if player.player_id == self.player_id:
+                        self.name = name
+                        self.logger = get_logger(self.name)
+                        break
+        else:  # else block runs if break was not hit
+            self.logger.warning(
+                "Bot with agent id '%s' did not find itself in the match settings",
+                self._game_interface.agent_id,
+            )
+
         self._try_initialize()
 
     def _handle_field_info(self, field_info: flat.FieldInfo):
@@ -124,7 +151,7 @@ class Bot:
     ):
         self.team = player_mappings.team
         controllable = player_mappings.controllables[0]
-        self.spawn_id = controllable.spawn_id
+        self.player_id = controllable.identifier
         self.index = controllable.index
         self._has_player_mapping = True
 
@@ -156,7 +183,7 @@ class Bot:
             return
 
         player_input = flat.PlayerInput(self.index, controller)
-        self._game_interface.send_player_input(player_input)
+        self._game_interface.send_msg(player_input)
 
     def _run(self):
         running = True
@@ -215,6 +242,34 @@ class Bot:
             match_comm.team_only,
         )
 
+    def rendering_status_update(self, update: flat.RenderingStatus):
+        """
+        Called when the server sends a rendering status update for ANY bot or script.
+
+        By default, this will update `self.renderer.can_render` if appropriate.
+        """
+        if update.is_bot and update.index == self.index:
+            self.renderer.can_render = update.status
+
+    def update_rendering_status(
+        self,
+        status: bool,
+        index: Optional[int] = None,
+        is_bot: bool = True,
+    ):
+        """
+        Requests the server to update the status of the ability for this bot to render.
+        Will be ignored if rendering has been set to AlwaysOff in the match settings.
+        If the status is successfully updated, the `self.rendering_status_update` method will be called which will update `self.renderer.can_render`.
+
+        - `status`: `True` to enable rendering, `False` to disable.
+        - `index`: The index of the bot to update. If `None`, uses the bot's own index.
+        - `is_bot`: `True` if `index` is a bot index, `False` if it is a script index.
+        """
+        self._game_interface.send_msg(
+            flat.RenderingStatus(self.index if index is None else index, is_bot, status)
+        )
+
     def handle_match_comm(
         self,
         index: int,
@@ -239,7 +294,7 @@ class Bot:
         - `display`: The message to be displayed in the game in "quick chat", or `None` to display nothing.
         - `team_only`: If True, only your team will receive the message.
         """
-        self._game_interface.send_match_comm(
+        self._game_interface.send_msg(
             flat.MatchComm(
                 self.index,
                 self.team,
@@ -263,7 +318,7 @@ class Bot:
         """
 
         game_state = fill_desired_game_state(balls, cars, match_info, commands)
-        self._game_interface.send_game_state(game_state)
+        self._game_interface.send_msg(game_state)
 
     def set_loadout(self, loadout: flat.PlayerLoadout, index: Optional[int] = None):
         """
@@ -272,9 +327,7 @@ class Bot:
         Does nothing if called outside `initialize` unless state setting is enabled in which case it
         respawns the car with the new loadout.
         """
-        self._game_interface.send_set_loadout(
-            flat.SetLoadout(index or self.index, loadout)
-        )
+        self._game_interface.send_msg(flat.SetLoadout(index or self.index, loadout))
 
     def initialize(self):
         """

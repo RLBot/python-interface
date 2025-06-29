@@ -10,6 +10,9 @@ class RenderFun(Script):
     last_state = flat.MatchPhase.Inactive
     player_count = 0
 
+    def initialize(self):
+        self.update_rendering_status(True)
+
     def handle_packet(self, packet: flat.GamePacket):
         if (
             packet.match_info.match_phase != flat.MatchPhase.Replay
@@ -32,11 +35,15 @@ class RenderFun(Script):
 
             self.do_render(radius)
 
-        with self.renderer.context('tick', self.renderer.red):
+        with self.renderer.context("tick", self.renderer.red):
             self.renderer.set_resolution(1920, 1080)
-            hsv = self.renderer.create_color_hsv(packet.match_info.seconds_elapsed * 0.1, 1.0, 1.0)
-            self.renderer.draw_string_2d('HSV 300px 50px', 300, 50, 1.0, hsv)
-            self.renderer.draw_string_2d('Red 330px 70px', 330, 70, 1.0)  # Use default color
+            hsv = self.renderer.create_color_hsv(
+                packet.match_info.seconds_elapsed * 0.1, 1.0, 1.0
+            )
+            self.renderer.draw_string_2d("HSV 300px 50px", 300, 50, 1.0, hsv)
+            self.renderer.draw_string_2d(
+                "Red 330px 70px", 330, 70, 1.0
+            )  # Use default color
             self.renderer.set_resolution(1, 1)
 
     def do_render(self, radius: float):
@@ -76,9 +83,7 @@ class RenderFun(Script):
             CarAnchor(0, Vector3(200, 0, 0)), 0.02, 0.02, self.renderer.blue
         )
 
-        self.renderer.draw_rect_2d(
-            0.75, 0.75, 0.1, 0.1, Color(150, 30, 100)
-        )
+        self.renderer.draw_rect_2d(0.75, 0.75, 0.1, 0.1, Color(150, 30, 100))
         self.renderer.draw_rect_2d(0.75, 0.75, 0.1, 0.1, self.renderer.black)
         for hkey, h in {
             "left": flat.TextHAlign.Left,

@@ -4,7 +4,7 @@ launcher = "Steam"
 auto_start_agents = true
 
 [match]
-game_mode = "Soccer"
+game_mode = "Soccar"
 game_map_upk = "Stadium_P"
 skip_replays = false
 start_without_countdown = false

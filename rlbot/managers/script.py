@@ -59,6 +59,9 @@ class Script:
             self._handle_ball_prediction
         )
         self._game_interface.packet_handlers.append(self._handle_packet)
+        self._game_interface.rendering_status_handlers.append(
+            self.rendering_status_update
+        )
 
         self.renderer = Renderer(self._game_interface)
 
@@ -84,16 +87,19 @@ class Script:
             exit()
 
         self._initialized_script = True
-        self._game_interface.send_init_complete()
+        self._game_interface.send_msg(flat.InitComplete())
 
     def _handle_match_config(self, match_config: flat.MatchConfiguration):
         self.match_config = match_config
+        self._has_match_settings = True
+        self.can_render = (
+            match_config.enable_rendering == flat.DebugRendering.OnByDefault
+        )
 
         for i, script in enumerate(match_config.script_configurations):
             if script.agent_id == self._game_interface.agent_id:
                 self.index = i
                 self.name = script.name
-                self._has_match_settings = True
                 break
         else:  # else block runs if break was not hit
             self.logger.warning(
@@ -182,6 +188,34 @@ class Script:
             match_comm.team_only,
         )
 
+    def rendering_status_update(self, update: flat.RenderingStatus):
+        """
+        Called when the server sends a rendering status update for ANY bot or script.
+
+        By default, this will update `self.renderer.can_render` if appropriate.
+        """
+        if not update.is_bot and update.index == self.index:
+            self.renderer.can_render = update.status
+
+    def update_rendering_status(
+        self,
+        status: bool,
+        index: Optional[int] = None,
+        is_bot: bool = False,
+    ):
+        """
+        Requests the server to update the status of the ability for this bot to render.
+        Will be ignored if rendering has been set to AlwaysOff in the match settings.
+        If the status is successfully updated, the `self.rendering_status_update` method will be called which will update `self.renderer.can_render`.
+
+        - `status`: `True` to enable rendering, `False` to disable.
+        - `index`: The index of the bot to update. If `None`, uses the script's own index.
+        - `is_bot`: `True` if `index` is a bot index, `False` if it is a script index.
+        """
+        self._game_interface.send_msg(
+            flat.RenderingStatus(self.index if index is None else index, is_bot, status)
+        )
+
     def handle_match_comm(
         self,
         index: int,
@@ -206,7 +240,7 @@ class Script:
         - `display`: The message to be displayed in the game in "quick chat", or `None` to display nothing.
         - `team_only`: If True, only your team will receive the message. For scripts, this means other scripts.
         """
-        self._game_interface.send_match_comm(
+        self._game_interface.send_msg(
             flat.MatchComm(
                 self.index,
                 2,
@@ -230,7 +264,7 @@ class Script:
         """
 
         game_state = fill_desired_game_state(balls, cars, match_info, commands)
-        self._game_interface.send_game_state(game_state)
+        self._game_interface.send_msg(game_state)
 
     def set_loadout(self, loadout: flat.PlayerLoadout, index: int):
         """
@@ -238,7 +272,7 @@ class Script:
 
         Will be ignored if called when state setting is disabled.
         """
-        self._game_interface.send_set_loadout(flat.SetLoadout(index, loadout))
+        self._game_interface.send_msg(flat.SetLoadout(index, loadout))
 
     def initialize(self):
         """

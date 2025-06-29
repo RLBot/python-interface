@@ -82,6 +82,8 @@ GAME_MAP_TO_UPK = {
     "DriftWoods": "Woods_P",
     "Neotokyo_Arcade": "NeoTokyo_Arcade_P",
     "FuturaGarden": "UF_Day_P",
+    "DFHStadium_Anniversary": "stadium_10a_p",
+    "Holyfield": "Labs_Holyfield_Space_P",
 }
 
 STANDARD_MAPS = [
@@ -135,4 +137,5 @@ STANDARD_MAPS = [
     "DriftWoods",
     "Neotokyo_Arcade",
     "FuturaGarden",
+    "DFHStadium_Anniversary",
 ]

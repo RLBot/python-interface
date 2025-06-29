@@ -3,9 +3,9 @@
 launcher = "Steam"
 
 [match]
-game_mode = "Soccer"
+game_mode = "Soccar"
 game_map_upk = "Stadium_P"
-enable_rendering = true
+enable_rendering = "OffByDefault"
 
 [[cars]]
 type = "Human"
