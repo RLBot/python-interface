@@ -33,7 +33,6 @@ class Hivemind:
     indices: list[int] = []
     names: list[str] = []
     player_ids: list[int] = []
-    can_render: bool = False
 
     @property
     def spawn_ids(self) -> list[int]:
@@ -238,10 +237,10 @@ class Hivemind:
         """
         Called when the server sends a rendering status update for ANY bot or script.
 
-        By default, this will update `self.can_render` if appropriate.
+        By default, this will update `self.renderer.can_render` if appropriate.
         """
         if update.is_bot and update.index in self.indices:
-            self.can_render = update.status
+            self.renderer.can_render = update.status
 
     def update_rendering_status(
         self,
@@ -252,7 +251,7 @@ class Hivemind:
         """
         Requests the server to update the status of the ability for this bot to render.
         Will be ignored if rendering has been set to AlwaysOff in the match settings.
-        If the status is successfully updated, the `self.rendering_status_update` method will be called which will update `self.can_render`.
+        If the status is successfully updated, the `self.rendering_status_update` method will be called which will update `self.renderer.can_render`.
 
         - `status`: `True` to enable rendering, `False` to disable.
         - `index`: The index of the bot to update. If `None`, uses the bot's own index.

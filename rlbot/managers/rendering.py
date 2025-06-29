@@ -46,6 +46,8 @@ class Renderer:
     purple = flat.Color(128, 0, 128)
     teal = flat.Color(0, 128, 128)
 
+    can_render: bool = False
+
     _logger = get_logger("renderer")
 
     _used_group_ids: set[int] = set()

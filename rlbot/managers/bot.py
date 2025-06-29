@@ -31,7 +31,6 @@ class Bot:
     index: int = -1
     name: str = ""
     player_id: int = 0
-    can_render: bool = False
 
     @property
     def spawn_id(self) -> int:
@@ -247,10 +246,10 @@ class Bot:
         """
         Called when the server sends a rendering status update for ANY bot or script.
 
-        By default, this will update `self.can_render` if appropriate.
+        By default, this will update `self.renderer.can_render` if appropriate.
         """
         if update.is_bot and update.index == self.index:
-            self.can_render = update.status
+            self.renderer.can_render = update.status
 
     def update_rendering_status(
         self,
@@ -261,7 +260,7 @@ class Bot:
         """
         Requests the server to update the status of the ability for this bot to render.
         Will be ignored if rendering has been set to AlwaysOff in the match settings.
-        If the status is successfully updated, the `self.rendering_status_update` method will be called which will update `self.can_render`.
+        If the status is successfully updated, the `self.rendering_status_update` method will be called which will update `self.renderer.can_render`.
 
         - `status`: `True` to enable rendering, `False` to disable.
         - `index`: The index of the bot to update. If `None`, uses the bot's own index.

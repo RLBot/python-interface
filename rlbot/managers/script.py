@@ -26,7 +26,6 @@ class Script:
 
     index: int = 0
     name: str = "UnknownScript"
-    can_render: bool = False
 
     match_config = flat.MatchConfiguration()
     field_info = flat.FieldInfo()
@@ -193,10 +192,10 @@ class Script:
         """
         Called when the server sends a rendering status update for ANY bot or script.
 
-        By default, this will update `self.can_render` if appropriate.
+        By default, this will update `self.renderer.can_render` if appropriate.
         """
         if not update.is_bot and update.index == self.index:
-            self.can_render = update.status
+            self.renderer.can_render = update.status
 
     def update_rendering_status(
         self,
@@ -207,7 +206,7 @@ class Script:
         """
         Requests the server to update the status of the ability for this bot to render.
         Will be ignored if rendering has been set to AlwaysOff in the match settings.
-        If the status is successfully updated, the `self.rendering_status_update` method will be called which will update `self.can_render`.
+        If the status is successfully updated, the `self.rendering_status_update` method will be called which will update `self.renderer.can_render`.
 
         - `status`: `True` to enable rendering, `False` to disable.
         - `index`: The index of the bot to update. If `None`, uses the script's own index.
