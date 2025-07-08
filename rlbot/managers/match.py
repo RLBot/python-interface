@@ -108,7 +108,7 @@ class MatchManager:
         ensure_server_started: bool = True,
     ):
         """
-        Starts a match using the given match settings or a path to a match settings toml file.
+        Starts a match using the given match configuration or a path to a match config toml file.
         Connection is automatically established if missing. Call `connect` if you
         want this process to receive match communication or ball prediction messages.
         """

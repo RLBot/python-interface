@@ -134,7 +134,7 @@ class SocketRelay:
                 flatbuffer = settings
             case _:
                 raise ValueError(
-                    "Expected MatchSettings or path to match settings toml file"
+                    "Expected MatchConfiguration or path to match config toml file"
                 )
 
         self.send_msg(flatbuffer)

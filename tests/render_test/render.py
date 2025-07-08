@@ -1,5 +1,3 @@
-from email.policy import default
-
 from rlbot import flat
 from rlbot.flat import BallAnchor, CarAnchor, Color, RenderAnchor, Vector3
 from rlbot.managers import Script
