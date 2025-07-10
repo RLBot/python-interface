@@ -134,7 +134,7 @@ class SocketRelay:
                 flatbuffer = settings
             case _:
                 raise ValueError(
-                    "Expected MatchSettings or path to match settings toml file"
+                    "Expected MatchConfiguration or path to match config toml file"
                 )
 
         self.send_msg(flatbuffer)
@@ -243,21 +243,6 @@ class SocketRelay:
         try:
             self.socket.setblocking(blocking)
             incoming_message = self.read_message()
-            try:
-                return self.handle_incoming_message(incoming_message)
-            except flat.InvalidFlatbuffer as e:
-                self.logger.error(
-                    "Error while unpacking message (%s bytes): %s",
-                    len(incoming_message),
-                    e,
-                )
-                return MsgHandlingResult.TERMINATED
-            except Exception as e:
-                self.logger.error(
-                    "Unexpected error while handling message of type: %s",
-                    e,
-                )
-                return MsgHandlingResult.TERMINATED
         except BlockingIOError:
             # No incoming messages and blocking==False
             return MsgHandlingResult.NO_INCOMING_MSGS
@@ -265,10 +250,26 @@ class SocketRelay:
             self.logger.error("SocketRelay disconnected unexpectedly!")
             return MsgHandlingResult.TERMINATED
 
+        try:
+            return self.handle_incoming_message(incoming_message)
+        except flat.InvalidFlatbuffer as e:
+            self.logger.error(
+                "Error while unpacking message (%s bytes): %s",
+                len(incoming_message),
+                e,
+            )
+            return MsgHandlingResult.TERMINATED
+        except Exception as e:
+            self.logger.error(
+                "Unexpected error while handling message of type: %s",
+                e,
+            )
+            return MsgHandlingResult.TERMINATED
+
     def handle_incoming_message(self, incoming_message: bytes) -> MsgHandlingResult:
         """
         Handles a messages by passing it to the relevant handlers.
-        Returns True if the message was NOT a shutdown request (i.e. NONE).
+        Returns True if the message was NOT a shutdown request
         """
 
         flatbuffer = flat.CorePacket.unpack(incoming_message).message

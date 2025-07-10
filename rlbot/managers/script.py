@@ -75,6 +75,17 @@ class Script:
 
         self.logger = get_logger(self.name)
 
+        for i, script in enumerate(self.match_config.script_configurations):
+            if script.agent_id == self._game_interface.agent_id:
+                self.index = i
+                self.name = script.name
+                break
+        else:  # else block runs if break was not hit
+            self.logger.warning(
+                "Script with agent id '%s' did not find itself in the match configuration",
+                self._game_interface.agent_id,
+            )
+
         try:
             self.initialize()
         except Exception as e:
@@ -95,17 +106,6 @@ class Script:
         self.can_render = (
             match_config.enable_rendering == flat.DebugRendering.OnByDefault
         )
-
-        for i, script in enumerate(match_config.script_configurations):
-            if script.agent_id == self._game_interface.agent_id:
-                self.index = i
-                self.name = script.name
-                break
-        else:  # else block runs if break was not hit
-            self.logger.warning(
-                "Script with agent id '%s' did not find itself in the match settings",
-                self._game_interface.agent_id,
-            )
 
         self._try_initialize()
 
@@ -205,7 +205,7 @@ class Script:
     ):
         """
         Requests the server to update the status of the ability for this bot to render.
-        Will be ignored if rendering has been set to AlwaysOff in the match settings.
+        Will be ignored if rendering has been set to AlwaysOff in the match configuration.
         If the status is successfully updated, the `self.rendering_status_update` method will be called which will update `self.renderer.can_render`.
 
         - `status`: `True` to enable rendering, `False` to disable.
@@ -227,7 +227,7 @@ class Script:
         """
         Called when a match communication message is received.
         See `send_match_comm`.
-        NOTE: Messages from scripts will have `team == 2` and the index will be its index in the match settings.
+        NOTE: Messages from scripts will have `team == 2` and the index will be its index in the match configuration.
         """
 
     def send_match_comm(
@@ -276,7 +276,7 @@ class Script:
 
     def initialize(self):
         """
-        Called when the script is ready for initialization. Field info, match settings, name, and index are
+        Called when the script is ready for initialization. Field info, match configuration, name, and index are
         fully loaded at this point, and will not return garbage data unlike in `__init__`.
         """
 

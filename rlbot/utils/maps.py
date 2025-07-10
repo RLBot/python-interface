@@ -71,7 +71,6 @@ GAME_MAP_TO_UPK = {
     "EstadioVida_Dusk": "ff_dusk_p",
     "Mannfield_Dusk": "eurostadium_dusk_p",
     "Farmstead_Pitched": "farm_grs_p",
-    "Farmstead_Upsidedown": "farm_hw_p",
     "Wasteland_Pitched": "wasteland_grs_p",
     "Neotokyo_Hacked": "neotokyo_hax_p",
     "AquaDome_Shallows": "Underwater_GRS_P",
@@ -84,6 +83,7 @@ GAME_MAP_TO_UPK = {
     "FuturaGarden": "UF_Day_P",
     "DFHStadium_Anniversary": "stadium_10a_p",
     "Holyfield": "Labs_Holyfield_Space_P",
+    "DriftWoods_Night": "woods_night_p"
 }
 
 STANDARD_MAPS = [
@@ -138,4 +138,5 @@ STANDARD_MAPS = [
     "Neotokyo_Arcade",
     "FuturaGarden",
     "DFHStadium_Anniversary",
+    "DriftWoods_Night"
 ]
