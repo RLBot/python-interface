@@ -323,7 +323,7 @@ class SocketRelay:
             self.logger.critical("RLBot is not responding to our disconnect request!?")
             self._running = False
 
-        assert (
-            not self._running
-        ), "Disconnect request or timeout should have set self._running to False"
+        assert not self._running, (
+            "Disconnect request or timeout should have set self._running to False"
+        )
         self.is_connected = False

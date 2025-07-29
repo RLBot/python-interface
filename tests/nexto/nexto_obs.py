@@ -286,8 +286,7 @@ class NextoObsBuilder(BatchedObsBuilder):
         for i in range(n_players):
             encoded_player = encoded_states[
                 :,
-                players_start_index
-                + i * player_length : players_start_index
+                players_start_index + i * player_length : players_start_index
                 + (i + 1) * player_length,
             ]
 

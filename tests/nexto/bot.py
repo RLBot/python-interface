@@ -369,7 +369,6 @@ class Nexto(Bot):
                 return
 
             for p in human_opps:
-
                 d = math.sqrt(
                     (p.physics.location.x - bad_goal[0]) ** 2
                     + (p.physics.location.y - bad_goal[1]) ** 2
