@@ -93,6 +93,7 @@ class MatchManager:
             rlbot_server_ip=rlbot_server_ip,
             rlbot_server_port=rlbot_server_port or self.rlbot_server_port,
         )
+        self.rlbot_interface.run(background_thread=True)
 
     def wait_for_first_packet(self):
         while self.packet is None or self.packet.match_info.match_phase in {
@@ -122,7 +123,6 @@ class MatchManager:
                 wants_ball_predictions=False,
                 close_between_matches=False,
             )
-            self.rlbot_interface.run(background_thread=True)
 
         self.rlbot_interface.start_match(config)
 
@@ -136,7 +136,7 @@ class MatchManager:
 
     def disconnect(self):
         """
-        Disconnect from the RLBotServer.
+        Disconnect from RLBotServer.
         Note that the server will continue running as long as Rocket League does.
         """
         self.rlbot_interface.disconnect()
@@ -167,8 +167,8 @@ class MatchManager:
 
         self.logger.info("Shutting down RLBot...")
 
-        # In theory this is all we need for the server to cleanly shut itself down
         try:
+            # In theory this is all we need for the server to cleanly shut itself down
             self.rlbot_interface.stop_match(shutdown_server=True)
         except BrokenPipeError:
             match gateway.find_server_process(self.main_executable_name)[0]:
