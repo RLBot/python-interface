@@ -60,7 +60,6 @@ GAME_MAP_TO_UPK = {
     "Barricade": "Labs_PillarHeat_P",
     "Colossus": "Labs_PillarWings_P",
     "BeckwithPark_Snowy": "Park_Snowy_P",
-    "NeoTokyo_Comic": "NeoTokyo_Toon_P",
     "UtopiaColiseum_Gilded": "UtopiaStadium_Lux_P",
     "SovereignHeights": "Street_P",
     "Hoops_TheBlock": "HoopsStreet_P",
@@ -139,4 +138,5 @@ STANDARD_MAPS = [
     "FuturaGarden",
     "DFHStadium_Anniversary",
     "DriftWoods_Night",
+    "NeoTokyo_Comic",
 ]
