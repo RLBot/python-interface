@@ -93,7 +93,42 @@ class MatchManager:
             rlbot_server_ip=rlbot_server_ip,
             rlbot_server_port=rlbot_server_port or self.rlbot_server_port,
         )
-        self.rlbot_interface.run(background_thread=True)
+
+    def run(self, *, background_thread: bool = False):
+        """
+        Handle incoming messages until disconnected.
+
+        - background_thread: If `True`, a background thread will be started to process messages.
+        """
+        self.rlbot_interface.run(background_thread=background_thread)
+
+    def connect_and_run(
+        self,
+        *,
+        wants_match_communications: bool,
+        wants_ball_predictions: bool,
+        close_between_matches: bool = True,
+        rlbot_server_ip: str = RLBOT_SERVER_IP,
+        rlbot_server_port: Optional[int] = None,
+        background_thread: bool = False,
+    ):
+        """
+        Connects to the RLBot server specifying the given settings.
+
+        - wants_match_communications: Whether match communication messages should be sent to this process.
+        - wants_ball_predictions: Whether ball prediction messages should be sent to this process.
+        - close_between_matches: Whether RLBot should close this connection between matches, specifically upon
+            `StartMatch` and `StopMatch` messages, since RLBot does not actually detect the ending of matches.
+        - background_thread: If `True`, a background thread will be started to process messages.
+        """
+        self.connect(
+            wants_match_communications=wants_match_communications,
+            wants_ball_predictions=wants_ball_predictions,
+            close_between_matches=close_between_matches,
+            rlbot_server_ip=rlbot_server_ip,
+            rlbot_server_port=rlbot_server_port,
+        )
+        self.run(background_thread=background_thread)
 
     def wait_for_first_packet(self):
         while self.packet is None or self.packet.match_info.match_phase in {
@@ -118,10 +153,11 @@ class MatchManager:
             self.ensure_server_started()
 
         if not self.rlbot_interface.is_connected:
-            self.connect(
+            self.connect_and_run(
                 wants_match_communications=False,
                 wants_ball_predictions=False,
                 close_between_matches=False,
+                background_thread=True,
             )
 
         self.rlbot_interface.start_match(config)

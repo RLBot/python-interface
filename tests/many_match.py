@@ -23,10 +23,11 @@ if __name__ == "__main__":
     match_manager = MatchManager(RLBOT_SERVER_FOLDER)
     match_manager.rlbot_interface.match_comm_handlers.append(handle_match_comm)
     match_manager.ensure_server_started()
-    match_manager.connect(
+    match_manager.connect_and_run(
         wants_match_communications=True,
         wants_ball_predictions=False,
         close_between_matches=False,
+        background_thread=False,
     )
 
     current_map = -1
