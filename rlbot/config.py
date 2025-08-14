@@ -3,7 +3,6 @@ from pathlib import Path
 from typing import Any, Literal
 
 import rlbot.flat as flat
-from rlbot.utils.logging import DEFAULT_LOGGER as logger
 from rlbot.utils.os_detector import CURRENT_OS, OS
 
 
@@ -112,7 +111,7 @@ def load_match_config(config_path: Path | str) -> flat.MatchConfiguration:
                     )
                 )
             case "human":
-                players.append(flat.PlayerConfiguration(flat.Human(), team, 0))
+                players.append(get_human(team))
             case t:
                 raise ConfigParsingException(
                     f"Invalid player type {repr(t)} for player {len(players)}."
@@ -321,6 +320,13 @@ def load_psyonix_config(
         team,
         0,
     )
+
+
+def get_human(team: int) -> flat.PlayerConfiguration:
+    """
+    Creates a `PlayerConfiguration` for a human player on the given team.
+    """
+    return flat.PlayerConfiguration(flat.Human(), team)
 
 
 def load_script_config(path: Path | str) -> flat.ScriptConfiguration:

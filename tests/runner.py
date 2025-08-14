@@ -16,7 +16,6 @@ if __name__ == "__main__":
     match_manager = MatchManager(RLBOT_SERVER_FOLDER)
 
     try:
-        match_manager.ensure_server_started()
         match_manager.start_match(MATCH_CONFIG_PATH)
 
         logger.info("Waiting before shutdown...")
@@ -25,7 +24,7 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         logger.warning("Shutting down early due to interrupt")
     except Exception:
-        logger.critical(f"Shutting down early due to the following error:")
+        logger.critical("Shutting down early due to the following error:")
         print_exc()
 
     match_manager.shut_down()

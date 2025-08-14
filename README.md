@@ -30,10 +30,11 @@ The following is how to setup a development environment for this project, NOT ho
   - `pip uninstall rlbot_flatbuffers`
   - `pip install --editable <path/to/rlbot_flatbuffers>`
 
-This project is formatted using [Black](https://github.com/psf/black).
+This project is formatted using [Ruff](https://docs.astral.sh/ruff/formatter/).
 
-- Install: `pip install black`.
-- Use: `black .`
+- Install: `pip install ruff`.
+- Sort imports: `ruff check --select I --fix`
+- Format code: `ruff format`
 
 ## Testing
 

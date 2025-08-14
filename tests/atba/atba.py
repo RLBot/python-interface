@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import math
-from typing import Optional
 
 from rlbot import flat
 from rlbot.managers import Bot
@@ -67,9 +66,9 @@ class Atba(Bot):
 
     def initialize(self):
         self.logger.info("Initializing agent!")
-
-        num_boost_pads = len(self.field_info.boost_pads)
-        self.logger.info(f"There are {num_boost_pads} boost pads on the field.")
+        self.logger.info(
+            f"There are {len(self.field_info.boost_pads)} boost pads and {len(self.field_info.goals)} goals on the field."
+        )
 
         if self.rendering:
             self.renderer.begin_rendering("custom one-time rendering group")
@@ -82,16 +81,6 @@ class Atba(Bot):
                 self.renderer.yellow,
             )
             self.renderer.end_rendering()
-
-    def handle_match_comm(
-        self,
-        index: int,
-        team: int,
-        content: bytes,
-        display: Optional[str],
-        team_only: bool,
-    ):
-        self.logger.info(f"Received match communication from index {index}! {display}")
 
     def get_output(self, packet: flat.GamePacket) -> flat.ControllerState:
         if self.rendering:
@@ -110,10 +99,10 @@ class Atba(Bot):
         if self.state_setting:
             self.test_state_setting(packet)
 
-        if self.match_comms:
+        if self.match_comms and packet.match_info.match_phase == flat.MatchPhase.Active:
             # Limit packet spam
             if packet.match_info.frame_num - self.last_send >= 360:
-                self.send_match_comm(b"", "Hello world!", True)
+                self.send_match_comm(b"", "Hello world!", False)
                 self.last_send = packet.match_info.frame_num
 
         ball_location = Vector2(packet.balls[0].physics.location)
@@ -145,7 +134,7 @@ class Atba(Bot):
                     i: flat.DesiredCarState(
                         flat.DesiredPhysics(rotation=flat.RotatorPartial(yaw=0))
                     )
-                    for i, car in enumerate(packet.players)
+                    for i in range(len(packet.players))
                 },
             )
 

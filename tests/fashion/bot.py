@@ -50,7 +50,7 @@ class Fashion(Bot):
                 ),
             )
 
-            self.logger.info(f"State setting new loadout")
+            self.logger.info("State setting new loadout")
             self.set_loadout(loadout)
             self.last_tick = packet.match_info.frame_num
 

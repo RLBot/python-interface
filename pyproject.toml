@@ -23,3 +23,12 @@ Repository = "https://github.com/RLBot/python-interface"
 
 [tool.setuptools.dynamic]
 version = {attr = "rlbot.version.__version__"}
+
+[dependency-groups]
+dev = [
+    "ruff>=0.12.5",
+    "toml>=0.10.2",
+]
+
+[tool.ruff.format]
+docstring-code-format = true
