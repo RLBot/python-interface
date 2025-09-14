@@ -1,6 +1,5 @@
 import os
 from traceback import print_exc
-from typing import Optional
 
 from rlbot import flat
 from rlbot.interface import (
@@ -35,10 +34,10 @@ class Script:
     _has_match_settings = False
     _has_field_info = False
 
-    _latest_packet: Optional[flat.GamePacket] = None
+    _latest_packet: flat.GamePacket | None = None
     _latest_prediction = flat.BallPrediction()
 
-    def __init__(self, default_agent_id: Optional[str] = None):
+    def __init__(self, default_agent_id: str | None = None):
         agent_id = os.environ.get("RLBOT_AGENT_ID") or default_agent_id
 
         if agent_id is None:
@@ -200,7 +199,7 @@ class Script:
     def update_rendering_status(
         self,
         status: bool,
-        index: Optional[int] = None,
+        index: int | None = None,
         is_bot: bool = False,
     ):
         """
@@ -221,7 +220,7 @@ class Script:
         index: int,
         team: int,
         content: bytes,
-        display: Optional[str],
+        display: str | None,
         team_only: bool,
     ):
         """
@@ -231,7 +230,7 @@ class Script:
         """
 
     def send_match_comm(
-        self, content: bytes, display: Optional[str] = None, team_only: bool = False
+        self, content: bytes, display: str | None = None, team_only: bool = False
     ):
         """
         Emits a match communication message to other bots and scripts.
@@ -254,7 +253,7 @@ class Script:
         self,
         balls: dict[int, flat.DesiredBallState] = {},
         cars: dict[int, flat.DesiredCarState] = {},
-        match_info: Optional[flat.DesiredMatchInfo] = None,
+        match_info: flat.DesiredMatchInfo | None = None,
         commands: list[str] = [],
     ):
         """

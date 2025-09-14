@@ -8,7 +8,7 @@ description = "A high performance Python interface for communicating with RLBot 
 dynamic = ["version"]
 requires-python = ">= 3.11"
 dependencies = [
-    "rlbot_flatbuffers~=0.17.0",
+    "rlbot_flatbuffers~=0.18.2",
     "psutil==7.*",
 ]
 readme = "README.md"
@@ -26,7 +26,7 @@ version = {attr = "rlbot.version.__version__"}
 
 [dependency-groups]
 dev = [
-    "ruff>=0.12.5",
+    "ruff>=0.13.0",
     "toml>=0.10.2",
 ]
 

@@ -1,12 +1,10 @@
-from typing import Optional
-
 from rlbot import flat
 
 
 def fill_desired_game_state(
     balls: dict[int, flat.DesiredBallState] = {},
     cars: dict[int, flat.DesiredCarState] = {},
-    match_info: Optional[flat.DesiredMatchInfo] = None,
+    match_info: flat.DesiredMatchInfo | None = None,
     commands: list[str] = [],
 ) -> flat.DesiredGameState:
     """

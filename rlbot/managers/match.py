@@ -1,6 +1,5 @@
 from pathlib import Path
 from time import sleep
-from typing import Optional
 
 import psutil
 
@@ -17,14 +16,14 @@ class MatchManager:
     """
 
     logger = DEFAULT_LOGGER
-    packet: Optional[flat.GamePacket] = None
-    rlbot_server_process: Optional[psutil.Process] = None
+    packet: flat.GamePacket | None = None
+    rlbot_server_process: psutil.Process | None = None
     rlbot_server_port = RLBOT_SERVER_PORT
     initialized = False
 
     def __init__(
         self,
-        main_executable_path: Optional[Path] = None,
+        main_executable_path: Path | None = None,
         main_executable_name: str = MAIN_EXECUTABLE_NAME,
     ):
         self.main_executable_path = main_executable_path
@@ -76,7 +75,7 @@ class MatchManager:
         wants_ball_predictions: bool,
         close_between_matches: bool = True,
         rlbot_server_ip: str = RLBOT_SERVER_IP,
-        rlbot_server_port: Optional[int] = None,
+        rlbot_server_port: int | None = None,
     ):
         """
         Connects to the RLBot server specifying the given settings.
@@ -109,7 +108,7 @@ class MatchManager:
         wants_ball_predictions: bool,
         close_between_matches: bool = True,
         rlbot_server_ip: str = RLBOT_SERVER_IP,
-        rlbot_server_port: Optional[int] = None,
+        rlbot_server_port: int | None = None,
         background_thread: bool = False,
     ):
         """
@@ -184,7 +183,7 @@ class MatchManager:
         self,
         balls: dict[int, flat.DesiredBallState] = {},
         cars: dict[int, flat.DesiredCarState] = {},
-        match_info: Optional[flat.DesiredMatchInfo] = None,
+        match_info: flat.DesiredMatchInfo | None = None,
         commands: list[str] = [],
     ):
         """

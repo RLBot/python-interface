@@ -3,7 +3,6 @@ import socket
 import stat
 import subprocess
 from pathlib import Path
-from typing import Optional
 
 import psutil
 
@@ -17,7 +16,7 @@ if CURRENT_OS != "Windows":
 
 def find_main_executable_path(
     main_executable_path: Path, main_executable_name: str
-) -> tuple[Path, Optional[Path]]:
+) -> tuple[Path, Path | None]:
     main_executable_path = main_executable_path.absolute().resolve()
 
     # check if the path is directly to the main executable
@@ -88,7 +87,7 @@ def launch(
 
 def find_server_process(
     main_executable_name: str,
-) -> tuple[Optional[psutil.Process], int]:
+) -> tuple[psutil.Process | None, int]:
     logger = DEFAULT_LOGGER
     for proc in psutil.process_iter():
         try:

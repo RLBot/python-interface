@@ -1,7 +1,6 @@
 import os
 from logging import Logger
 from traceback import print_exc
-from typing import Optional
 
 from rlbot import flat
 from rlbot.interface import (
@@ -13,8 +12,6 @@ from rlbot.interface import (
 from rlbot.managers import Renderer
 from rlbot.utils import fill_desired_game_state
 from rlbot.utils.logging import DEFAULT_LOGGER, get_logger
-
-WARNED_SPAWN_ID_DEPRECATED = False
 
 
 class Hivemind:
@@ -33,17 +30,6 @@ class Hivemind:
     indices: list[int] = []
     names: list[str] = []
     player_ids: list[int] = []
-
-    @property
-    def spawn_ids(self) -> list[int]:
-        global WARNED_SPAWN_ID_DEPRECATED
-        if not WARNED_SPAWN_ID_DEPRECATED:
-            WARNED_SPAWN_ID_DEPRECATED = True
-            self._logger.warning(
-                "'spawn_id' getter accessed, which is deprecated in favor of 'player_id'."
-            )
-
-        return self.player_ids
 
     match_config = flat.MatchConfiguration()
     """
@@ -65,10 +51,10 @@ class Hivemind:
     _has_field_info = False
     _has_player_mapping = False
 
-    _latest_packet: Optional[flat.GamePacket] = None
+    _latest_packet: flat.GamePacket | None = None
     _latest_prediction = flat.BallPrediction()
 
-    def __init__(self, default_agent_id: Optional[str] = None):
+    def __init__(self, default_agent_id: str | None = None):
         agent_id = os.environ.get("RLBOT_AGENT_ID") or default_agent_id
 
         if agent_id is None:
@@ -110,7 +96,7 @@ class Hivemind:
         # Search match configuration for our spawn ids
         for player_id in self.player_ids:
             for player in self.match_config.player_configurations:
-                match player.variety.item:
+                match player.variety:
                     case flat.CustomBot(name):
                         if player.player_id == player_id:
                             self.names.append(name)
@@ -251,7 +237,7 @@ class Hivemind:
     def update_rendering_status(
         self,
         status: bool,
-        index: Optional[int] = None,
+        index: int | None = None,
         is_bot: bool = True,
     ):
         """
@@ -283,7 +269,7 @@ class Hivemind:
         index: int,
         team: int,
         content: bytes,
-        display: Optional[str],
+        display: str | None,
         team_only: bool,
     ):
         """
@@ -296,7 +282,7 @@ class Hivemind:
         self,
         index: int,
         content: bytes,
-        display: Optional[str] = None,
+        display: str | None = None,
         team_only: bool = False,
     ):
         """
@@ -320,7 +306,7 @@ class Hivemind:
         self,
         balls: dict[int, flat.DesiredBallState] = {},
         cars: dict[int, flat.DesiredCarState] = {},
-        match_info: Optional[flat.DesiredMatchInfo] = None,
+        match_info: flat.DesiredMatchInfo | None = None,
         commands: list[str] = [],
     ):
         """

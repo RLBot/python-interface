@@ -1,7 +1,6 @@
 import math
 from collections.abc import Callable, Sequence
 from contextlib import contextmanager
-from typing import Optional
 
 from rlbot import flat
 from rlbot.interface import SocketRelay
@@ -51,7 +50,7 @@ class Renderer:
     _logger = get_logger("renderer")
 
     _used_group_ids: set[int] = set()
-    _group_id: Optional[int] = None
+    _group_id: int | None = None
     _current_renders: list[flat.RenderMessage] = []
 
     _default_color = white
