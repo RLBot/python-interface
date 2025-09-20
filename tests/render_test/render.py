@@ -25,7 +25,7 @@ class RenderFun(Script):
 
             radius = 0
             if len(packet.balls) > 0:
-                match packet.balls[0].shape.item:
+                match packet.balls[0].shape:
                     case flat.SphereShape() | flat.CylinderShape() as shape:
                         radius = shape.diameter / 2
                     case flat.BoxShape() as shape:
