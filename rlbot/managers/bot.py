@@ -1,6 +1,5 @@
 import os
 from traceback import print_exc
-from typing import Optional
 
 from rlbot import flat
 from rlbot.interface import (
@@ -12,8 +11,6 @@ from rlbot.interface import (
 from rlbot.managers.rendering import Renderer
 from rlbot.utils import fill_desired_game_state
 from rlbot.utils.logging import DEFAULT_LOGGER, get_logger
-
-WARNED_SPAWN_ID_DEPRECATED = False
 
 
 class Bot:
@@ -31,17 +28,6 @@ class Bot:
     index: int = -1
     name: str = ""
     player_id: int = 0
-
-    @property
-    def spawn_id(self) -> int:
-        global WARNED_SPAWN_ID_DEPRECATED
-        if not WARNED_SPAWN_ID_DEPRECATED:
-            WARNED_SPAWN_ID_DEPRECATED = True
-            self.logger.warning(
-                "'spawn_id' getter accessed, which is deprecated in favor of 'player_id'."
-            )
-
-        return self.player_id
 
     match_config = flat.MatchConfiguration()
     """
@@ -63,10 +49,10 @@ class Bot:
     _has_field_info = False
     _has_player_mapping = False
 
-    _latest_packet: Optional[flat.GamePacket] = None
+    _latest_packet: flat.GamePacket | None = None
     _latest_prediction = flat.BallPrediction()
 
-    def __init__(self, default_agent_id: Optional[str] = None):
+    def __init__(self, default_agent_id: str | None = None):
         agent_id = os.environ.get("RLBOT_AGENT_ID") or default_agent_id
 
         if agent_id is None:
@@ -107,7 +93,7 @@ class Bot:
             return
 
         for player in self.match_config.player_configurations:
-            match player.variety.item:
+            match player.variety:
                 case flat.CustomBot(name):
                     if player.player_id == self.player_id:
                         self.name = name
@@ -253,7 +239,7 @@ class Bot:
     def update_rendering_status(
         self,
         status: bool,
-        index: Optional[int] = None,
+        index: int | None = None,
         is_bot: bool = True,
     ):
         """
@@ -274,7 +260,7 @@ class Bot:
         index: int,
         team: int,
         content: bytes,
-        display: Optional[str],
+        display: str | None,
         team_only: bool,
     ):
         """
@@ -284,7 +270,7 @@ class Bot:
         """
 
     def send_match_comm(
-        self, content: bytes, display: Optional[str] = None, team_only: bool = False
+        self, content: bytes, display: str | None = None, team_only: bool = False
     ):
         """
         Emits a match communication message to other bots and scripts.
@@ -307,7 +293,7 @@ class Bot:
         self,
         balls: dict[int, flat.DesiredBallState] = {},
         cars: dict[int, flat.DesiredCarState] = {},
-        match_info: Optional[flat.DesiredMatchInfo] = None,
+        match_info: flat.DesiredMatchInfo | None = None,
         commands: list[str] = [],
     ):
         """
@@ -319,7 +305,7 @@ class Bot:
         game_state = fill_desired_game_state(balls, cars, match_info, commands)
         self._game_interface.send_msg(game_state)
 
-    def set_loadout(self, loadout: flat.PlayerLoadout, index: Optional[int] = None):
+    def set_loadout(self, loadout: flat.PlayerLoadout, index: int | None = None):
         """
         Sets the loadout of a bot.
         Can be used to select or generate a loadout for the match when called inside `initialize`.

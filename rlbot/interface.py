@@ -5,7 +5,6 @@ from enum import IntEnum
 from pathlib import Path
 from socket import IPPROTO_TCP, TCP_NODELAY, socket
 from threading import Thread
-from typing import Optional
 
 from rlbot import flat
 from rlbot.utils.logging import get_logger
@@ -46,13 +45,13 @@ class SocketRelay:
         Callable[[flat.ControllableTeamInfo], None]
     ] = []
     rendering_status_handlers: list[Callable[[flat.RenderingStatus], None]] = []
-    raw_handlers: list[Callable[[flat.CoreMessage], None]] = []
+    raw_handlers: list[Callable[[flat.CorePacket], None]] = []
 
     def __init__(
         self,
         agent_id: str,
         connection_timeout: float = 120,
-        logger: Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ):
         self.agent_id = agent_id
         self.connection_timeout = connection_timeout
@@ -272,12 +271,12 @@ class SocketRelay:
         Returns True if the message was NOT a shutdown request
         """
 
-        flatbuffer = flat.CorePacket.unpack(incoming_message).message
+        flatbuffer = flat.CorePacket.unpack(incoming_message)
 
         for raw_handler in self.raw_handlers:
             raw_handler(flatbuffer)
 
-        match flatbuffer.item:
+        match flatbuffer.message:
             case flat.DisconnectSignal():
                 return MsgHandlingResult.TERMINATED
             case flat.GamePacket() as packet:
