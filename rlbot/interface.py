@@ -2,8 +2,10 @@ import logging
 import time
 from collections.abc import Callable
 from enum import IntEnum
+from ipaddress import ip_address
 from pathlib import Path
-from socket import IPPROTO_TCP, TCP_NODELAY, socket
+from socket import AF_INET, AF_INET6, IPPROTO_TCP, TCP_NODELAY
+from socket import socket as sock
 from threading import Thread
 
 from rlbot import flat
@@ -47,6 +49,8 @@ class SocketRelay:
     rendering_status_handlers: list[Callable[[flat.RenderingStatus], None]] = []
     raw_handlers: list[Callable[[flat.CorePacket], None]] = []
 
+    socket: sock | None = None
+
     def __init__(
         self,
         agent_id: str,
@@ -57,13 +61,9 @@ class SocketRelay:
         self.connection_timeout = connection_timeout
         self.logger = get_logger("interface") if logger is None else logger
 
-        self.socket = socket()
-
-        # Allow sending packets before getting a response from core
-        self.socket.setsockopt(IPPROTO_TCP, TCP_NODELAY, 1)
-
     def __del__(self):
-        self.socket.close()
+        if self.socket is not None:
+            self.socket.close()
 
     @staticmethod
     def _int_to_bytes(val: int) -> bytes:
@@ -73,6 +73,8 @@ class SocketRelay:
         return int.from_bytes(self._read_exact(2), "big")
 
     def _read_exact(self, n: int) -> bytes:
+        assert self.socket is not None, "Socket has not been established"
+
         buff = bytearray(n)
         view = memoryview(buff)
 
@@ -89,6 +91,7 @@ class SocketRelay:
         return self._read_exact(size)
 
     def send_bytes(self, data: bytes):
+        assert self.socket is not None, "Socket has not been established"
         assert self.is_connected, "Connection has not been established"
 
         size = len(data)
@@ -157,7 +160,13 @@ class SocketRelay:
         """
         assert not self.is_connected, "Connection has already been established"
 
+        # Check if the IP is IPv4 or IPv6 and configure the socket accordingly
+        family = AF_INET if ip_address(rlbot_server_ip).version == 4 else AF_INET6
+        self.socket = sock(family)
         self.socket.settimeout(self.connection_timeout)
+        # Allow sending packets before getting a response from core
+        self.socket.setsockopt(IPPROTO_TCP, TCP_NODELAY, 1)
+
         try:
             begin_time = time.time()
             next_warning = 10
@@ -238,6 +247,7 @@ class SocketRelay:
 
         Second boolean returns true if there might be more messages to handle without a delay.
         """
+        assert self.socket is not None, "Socket has not been established"
         assert self.is_connected, "Connection has not been established"
         try:
             self.socket.setblocking(blocking)
