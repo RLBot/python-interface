@@ -33,6 +33,8 @@ class SocketRelay:
     from `rlbot.managers`.
     """
 
+    can_render = False
+    """Indicates whether RLBotServer has given permission to send rendering commands"""
     is_connected = False
     _running = False
     """Indicates whether a messages are being handled by the `run` loop (potentially in a background thread)"""
@@ -46,7 +48,6 @@ class SocketRelay:
     controllable_team_info_handlers: list[
         Callable[[flat.ControllableTeamInfo], None]
     ] = []
-    rendering_status_handlers: list[Callable[[flat.RenderingStatus], None]] = []
     raw_handlers: list[Callable[[flat.CorePacket], None]] = []
 
     socket: sock | None = None
@@ -296,6 +297,10 @@ class SocketRelay:
                 for handler in self.field_info_handlers:
                     handler(field_info)
             case flat.MatchConfiguration() as match_config:
+                self.can_render = (
+                    match_config.enable_rendering == flat.DebugRendering.OnByDefault
+                )
+
                 for handler in self.match_config_handlers:
                     handler(match_config)
             case flat.MatchComm() as match_comm:
@@ -308,8 +313,7 @@ class SocketRelay:
                 for handler in self.controllable_team_info_handlers:
                     handler(controllable_team_info)
             case flat.RenderingStatus() as rendering_status:
-                for handler in self.rendering_status_handlers:
-                    handler(rendering_status)
+                self.can_render = rendering_status.status
             case _:
                 self.logger.warning(
                     "Received unknown message type: %s",

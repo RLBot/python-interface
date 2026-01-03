@@ -84,6 +84,12 @@ GAME_MAP_TO_UPK = {
     "DFHStadium_Anniversary": "stadium_10a_p",
     "Holyfield": "Labs_Holyfield_Space_P",
     "DriftWoods_Night": "woods_night_p",
+    "BoostfieldMall": "Mall_Day_P",
+    "ParcDeParis": "Paname_Dusk_P",
+    "Roadblock": "Labs_Octagon_B2B_02_P",
+    "Mannfield_Quads": "Labs_4v4_Arena15_EuroStadium_Night_P",
+    "MidnightMetro_Quads": "Labs_4v4_Arena15_Blackout_P",
+    "SunsetDunes_Quads": "Labs_4v4_Arena15_Retro_P",
 }
 
 STANDARD_MAPS = [
@@ -140,4 +146,6 @@ STANDARD_MAPS = [
     "DFHStadium_Anniversary",
     "DriftWoods_Night",
     "NeoTokyo_Comic",
+    "BoostfieldMall",
+    "ParcDeParis",
 ]
