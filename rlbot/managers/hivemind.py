@@ -232,7 +232,7 @@ class Hivemind:
         By default, this will update `self.renderer.can_render` if appropriate.
         """
         if update.is_bot and update.index in self.indices:
-            self.renderer.can_render = update.status
+            self._game_interface.can_render = update.status
 
     def update_rendering_status(
         self,

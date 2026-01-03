@@ -45,8 +45,6 @@ class Renderer:
     purple = flat.Color(128, 0, 128)
     teal = flat.Color(0, 128, 128)
 
-    can_render: bool = False
-
     _logger = get_logger("renderer")
 
     _used_group_ids: set[int] = set()
@@ -62,6 +60,11 @@ class Renderer:
         self._send_msg: Callable[[flat.RenderGroup | flat.RemoveRenderGroup], None] = (
             game_interface.send_msg
         )
+        self._game_interface = game_interface
+
+    @property
+    def can_render(self) -> bool:
+        return self._game_interface.can_render
 
     def set_resolution(self, screen_width: float, screen_height: float):
         """

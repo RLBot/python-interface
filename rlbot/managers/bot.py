@@ -120,9 +120,6 @@ class Bot:
     def _handle_match_config(self, match_config: flat.MatchConfiguration):
         self.match_config = match_config
         self._has_match_settings = True
-        self.can_render = (
-            match_config.enable_rendering == flat.DebugRendering.OnByDefault
-        )
 
         self._try_initialize()
 
@@ -234,7 +231,7 @@ class Bot:
         By default, this will update `self.renderer.can_render` if appropriate.
         """
         if update.is_bot and update.index == self.index:
-            self.renderer.can_render = update.status
+            self._game_interface.can_render = update.status
 
     def update_rendering_status(
         self,

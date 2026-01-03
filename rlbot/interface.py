@@ -33,6 +33,8 @@ class SocketRelay:
     from `rlbot.managers`.
     """
 
+    can_render = False
+    """Indicates whether RLBotServer has given permission to send rendering commands"""
     is_connected = False
     _running = False
     """Indicates whether a messages are being handled by the `run` loop (potentially in a background thread)"""
@@ -296,6 +298,10 @@ class SocketRelay:
                 for handler in self.field_info_handlers:
                     handler(field_info)
             case flat.MatchConfiguration() as match_config:
+                self.can_render = (
+                    match_config.enable_rendering == flat.DebugRendering.OnByDefault
+                )
+
                 for handler in self.match_config_handlers:
                     handler(match_config)
             case flat.MatchComm() as match_comm:
