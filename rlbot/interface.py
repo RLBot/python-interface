@@ -48,7 +48,6 @@ class SocketRelay:
     controllable_team_info_handlers: list[
         Callable[[flat.ControllableTeamInfo], None]
     ] = []
-    rendering_status_handlers: list[Callable[[flat.RenderingStatus], None]] = []
     raw_handlers: list[Callable[[flat.CorePacket], None]] = []
 
     socket: sock | None = None
@@ -314,8 +313,7 @@ class SocketRelay:
                 for handler in self.controllable_team_info_handlers:
                     handler(controllable_team_info)
             case flat.RenderingStatus() as rendering_status:
-                for handler in self.rendering_status_handlers:
-                    handler(rendering_status)
+                self.can_render = rendering_status.status
             case _:
                 self.logger.warning(
                     "Received unknown message type: %s",

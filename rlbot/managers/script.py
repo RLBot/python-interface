@@ -58,9 +58,6 @@ class Script:
             self._handle_ball_prediction
         )
         self._game_interface.packet_handlers.append(self._handle_packet)
-        self._game_interface.rendering_status_handlers.append(
-            self.rendering_status_update
-        )
 
         self.renderer = Renderer(self._game_interface)
 
@@ -183,15 +180,6 @@ class Script:
             match_comm.display,
             match_comm.team_only,
         )
-
-    def rendering_status_update(self, update: flat.RenderingStatus):
-        """
-        Called when the server sends a rendering status update for ANY bot or script.
-
-        By default, this will update `self.renderer.can_render` if appropriate.
-        """
-        if not update.is_bot and update.index == self.index:
-            self._game_interface.can_render = update.status
 
     def update_rendering_status(
         self,

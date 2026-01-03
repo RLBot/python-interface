@@ -78,9 +78,6 @@ class Hivemind:
             self._handle_controllable_team_info
         )
         self._game_interface.packet_handlers.append(self._handle_packet)
-        self._game_interface.rendering_status_handlers.append(
-            self.rendering_status_update
-        )
 
         self.renderer = Renderer(self._game_interface)
 
@@ -224,15 +221,6 @@ class Hivemind:
         finally:
             self.retire()
             del self._game_interface
-
-    def rendering_status_update(self, update: flat.RenderingStatus):
-        """
-        Called when the server sends a rendering status update for ANY bot or script.
-
-        By default, this will update `self.renderer.can_render` if appropriate.
-        """
-        if update.is_bot and update.index in self.indices:
-            self._game_interface.can_render = update.status
 
     def update_rendering_status(
         self,
