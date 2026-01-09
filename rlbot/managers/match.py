@@ -1,3 +1,5 @@
+import os
+import stat
 from pathlib import Path
 from time import sleep
 
@@ -7,7 +9,7 @@ from rlbot import flat
 from rlbot.interface import RLBOT_SERVER_IP, RLBOT_SERVER_PORT, SocketRelay
 from rlbot.utils import fill_desired_game_state, gateway
 from rlbot.utils.logging import DEFAULT_LOGGER
-from rlbot.utils.os_detector import MAIN_EXECUTABLE_NAME
+from rlbot.utils.os_detector import RLBOT_SERVER_NAME, OS, CURRENT_OS
 
 
 class MatchManager:
@@ -23,11 +25,17 @@ class MatchManager:
 
     def __init__(
         self,
-        main_executable_path: Path | None = None,
-        main_executable_name: str = MAIN_EXECUTABLE_NAME,
+        rlbot_server_path: Path | None = None
     ):
-        self.main_executable_path = main_executable_path
-        self.main_executable_name = main_executable_name
+        """
+        Initialize a MatchManager.
+        Args:
+            rlbot_server_path: The path to the RLBotServer executable. The path is used to launch the server
+            if it is not already running. If set to None, the RLBotServer in the current working directory will
+            be used, and otherwise the globally installed RLBotServer will be used.
+        """
+
+        self.rlbot_server_path = rlbot_server_path
 
         self.rlbot_interface: SocketRelay = SocketRelay("")
         self.rlbot_interface.packet_handlers.append(self._packet_reporter)
@@ -41,27 +49,60 @@ class MatchManager:
     def ensure_server_started(self):
         """
         Ensures that RLBotServer is running, starting it if it is not.
+        If no path to an RLBotServer executable was passed during initialization of the MatchManager,
+        the function will use the RLBotServer executable in the current working directory, if any, or
+        otherwise the global installed RLBotServer will be used, if any.
         """
 
-        self.rlbot_server_process, self.rlbot_server_port = gateway.find_server_process(
-            self.main_executable_name
-        )
+        exe_name = self.rlbot_server_path.stem if self.rlbot_server_path is not None and self.rlbot_server_path.is_file() else RLBOT_SERVER_NAME
+        self.rlbot_server_process, self.rlbot_server_port = gateway.find_server_process(exe_name)
         if self.rlbot_server_process is not None:
-            self.logger.info("Already have %s running!", self.main_executable_name)
+            self.logger.info("%s is already running!", exe_name)
             return
 
-        if self.main_executable_path is None:
-            self.main_executable_path = Path.cwd()
+        if self.rlbot_server_path is None:
+            # Look in cwd or localappdata
+            path = Path.cwd() / RLBOT_SERVER_NAME
+            if not path.exists() and CURRENT_OS == OS.WINDOWS:
+                self.logger.debug(f"Could not find RLBotServer in cwd ('{path.parent}'), trying %localappdata% instead.")
+                path = Path(os.environ.get("LOCALAPPDATA")) / "RLBot5" / "bin" / RLBOT_SERVER_NAME
+            if not path.exists():
+                raise FileNotFoundError(
+                    "Unable to find RLBotServer in the current working directory "
+                    "or in the default installation location. "
+                    "Is your antivirus messing you up? Check "
+                    "https://github.com/RLBot/RLBot/wiki/Antivirus-Notes."
+                )
+        else:
+            # User specified path
+            path = self.rlbot_server_path
+            if path.exists() and path.is_dir():
+                path = path / RLBOT_SERVER_NAME
+            if not path.exists():
+                raise FileNotFoundError(f"Unable to find RLBotServer at the specified path '{path}'.")
 
-        rlbot_server_process, self.rlbot_server_port = gateway.launch(
-            self.main_executable_path,
-            self.main_executable_name,
-        )
+        if path is None or not os.access(path, os.F_OK):
+            raise FileNotFoundError(
+                f"Unable to find RLBotServer at '{path}'. "
+                "Is your antivirus messing you up? Check "
+                "https://github.com/RLBot/RLBot/wiki/Antivirus-Notes."
+            )
+
+        if not os.access(path, os.X_OK):
+            os.chmod(path, stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+
+        if not os.access(path, os.X_OK):
+            raise PermissionError(
+                "Unable to execute RLBotServer due to file permissions! Is your antivirus messing you up? "
+                f"Check https://github.com/RLBot/RLBot/wiki/Antivirus-Notes. The exact path is '{path}'"
+            )
+
+        rlbot_server_process, self.rlbot_server_port = gateway.launch(path)
         self.rlbot_server_process = psutil.Process(rlbot_server_process.pid)
 
         self.logger.info(
             "Started %s with process id %s",
-            self.main_executable_name,
+            path,
             self.rlbot_server_process.pid,
         )
 
