@@ -9,7 +9,7 @@ from rlbot import flat
 from rlbot.interface import RLBOT_SERVER_IP, RLBOT_SERVER_PORT, SocketRelay
 from rlbot.utils import fill_desired_game_state, gateway
 from rlbot.utils.logging import DEFAULT_LOGGER
-from rlbot.utils.os_detector import RLBOT_SERVER_NAME, OS, CURRENT_OS
+from rlbot.utils.os_detector import CURRENT_OS, OS, RLBOT_SERVER_NAME
 
 
 class MatchManager:
@@ -23,10 +23,7 @@ class MatchManager:
     rlbot_server_port = RLBOT_SERVER_PORT
     initialized = False
 
-    def __init__(
-        self,
-        rlbot_server_path: Path | None = None
-    ):
+    def __init__(self, rlbot_server_path: Path | None = None):
         """
         Initialize a MatchManager.
         Args:
@@ -54,8 +51,14 @@ class MatchManager:
         otherwise the global installed RLBotServer will be used, if any.
         """
 
-        exe_name = self.rlbot_server_path.stem if self.rlbot_server_path is not None and self.rlbot_server_path.is_file() else RLBOT_SERVER_NAME
-        self.rlbot_server_process, self.rlbot_server_port = gateway.find_server_process(exe_name)
+        exe_name = (
+            self.rlbot_server_path.stem
+            if self.rlbot_server_path is not None and self.rlbot_server_path.is_file()
+            else RLBOT_SERVER_NAME
+        )
+        self.rlbot_server_process, self.rlbot_server_port = gateway.find_server_process(
+            exe_name
+        )
         if self.rlbot_server_process is not None:
             self.logger.info("%s is already running!", exe_name)
             return
@@ -64,8 +67,15 @@ class MatchManager:
             # Look in cwd or localappdata
             path = Path.cwd() / RLBOT_SERVER_NAME
             if not path.exists() and CURRENT_OS == OS.WINDOWS:
-                self.logger.debug(f"Could not find RLBotServer in cwd ('{path.parent}'), trying %localappdata% instead.")
-                path = Path(os.environ.get("LOCALAPPDATA")) / "RLBot5" / "bin" / RLBOT_SERVER_NAME
+                self.logger.debug(
+                    f"Could not find RLBotServer in cwd ('{path.parent}'), trying %localappdata% instead."
+                )
+                path = (
+                    Path(os.environ.get("LOCALAPPDATA"))
+                    / "RLBot5"
+                    / "bin"
+                    / RLBOT_SERVER_NAME
+                )
             if not path.exists():
                 raise FileNotFoundError(
                     "Unable to find RLBotServer in the current working directory "
@@ -79,7 +89,9 @@ class MatchManager:
             if path.exists() and path.is_dir():
                 path = path / RLBOT_SERVER_NAME
             if not path.exists():
-                raise FileNotFoundError(f"Unable to find RLBotServer at the specified path '{path}'.")
+                raise FileNotFoundError(
+                    f"Unable to find RLBotServer at the specified path '{path}'."
+                )
 
         if path is None or not os.access(path, os.F_OK):
             raise FileNotFoundError(

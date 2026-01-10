@@ -9,7 +9,9 @@ from rlbot.utils.os_detector import RLBOT_SERVER_NAME
 DIR = Path(__file__).parent
 
 MATCH_CONFIG_PATH = DIR / "human_vs_atba.toml"
-RLBOT_SERVER_PATH = find_file(DIR / "../../core/RLBotCS/bin/Release/", RLBOT_SERVER_NAME)
+RLBOT_SERVER_PATH = find_file(
+    DIR / "../../core/RLBotCS/bin/Release/", RLBOT_SERVER_NAME
+)
 
 if __name__ == "__main__":
     with MatchManager(RLBOT_SERVER_PATH) as man:

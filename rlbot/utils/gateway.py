@@ -1,6 +1,4 @@
-import os
 import socket
-import stat
 import subprocess
 from pathlib import Path
 
@@ -14,9 +12,7 @@ if CURRENT_OS != "Windows":
     import shlex
 
 
-def find_file(
-    base_dir: Path, file_name: str
-) -> Path | None:
+def find_file(base_dir: Path, file_name: str) -> Path | None:
     """
     Looks for a file called `file_name` in the given `base_dir` directory and its subdirectories.
     Returns the path to the file, or None if it was not found.
@@ -54,7 +50,6 @@ def find_open_server_port() -> int:
 
 
 def launch(exe_path: Path) -> tuple[subprocess.Popen[bytes], int]:
-
     port = find_open_server_port()
 
     if CURRENT_OS == "Windows":
