@@ -4,11 +4,15 @@ from time import sleep
 from rlbot import flat
 from rlbot.config import load_player_config
 from rlbot.managers import MatchManager
+from rlbot.utils.gateway import find_file
+from rlbot.utils.os_detector import RLBOT_SERVER_NAME
 
 DIR = Path(__file__).parent
 
 BOT_PATH = DIR / "atba/atba.bot.toml"
-RLBOT_SERVER_FOLDER = DIR / "../../core/RLBotCS/bin/Release/"
+RLBOT_SERVER_PATH = find_file(
+    DIR / "../../core/RLBotCS/bin/Release/", RLBOT_SERVER_NAME
+)
 
 num_comms = set()
 
@@ -20,7 +24,7 @@ def handle_match_comm(comm: flat.MatchComm):
 
 
 if __name__ == "__main__":
-    match_manager = MatchManager(RLBOT_SERVER_FOLDER)
+    match_manager = MatchManager(RLBOT_SERVER_PATH)
     match_manager.rlbot_interface.match_comm_handlers.append(handle_match_comm)
     match_manager.ensure_server_started()
     match_manager.connect_and_run(

@@ -10,15 +10,15 @@ class OS(IntEnum):
 
 match platform.system():
     case "Windows":
-        MAIN_EXECUTABLE_NAME = "RLBotServer.exe"
+        RLBOT_SERVER_NAME = "RLBotServer.exe"
         CURRENT_OS = OS.WINDOWS
     case "Linux":
-        MAIN_EXECUTABLE_NAME = "RLBotServer"
+        RLBOT_SERVER_NAME = "RLBotServer"
         CURRENT_OS = OS.LINUX
     case _ as unknown_os:
         from rlbot.utils.logging import get_logger
 
-        MAIN_EXECUTABLE_NAME = ""
+        RLBOT_SERVER_NAME = ""
         CURRENT_OS = OS.UNKNOWN
 
         get_logger("os_detector").warning("Unknown OS: %s", unknown_os)

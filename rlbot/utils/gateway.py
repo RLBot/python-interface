@@ -1,6 +1,4 @@
-import os
 import socket
-import stat
 import subprocess
 from pathlib import Path
 
@@ -14,21 +12,21 @@ if CURRENT_OS != "Windows":
     import shlex
 
 
-def find_main_executable_path(
-    main_executable_path: Path, main_executable_name: str
-) -> tuple[Path, Path | None]:
-    main_executable_path = main_executable_path.absolute().resolve()
+def find_file(base_dir: Path, file_name: str) -> Path | None:
+    """
+    Looks for a file called `file_name` in the given `base_dir` directory and its subdirectories.
+    Returns the path to the file, or None if it was not found.
+    """
 
-    # check if the path is directly to the main executable
-    if main_executable_path.is_file():
-        return main_executable_path.parent, main_executable_path
+    base_dir = base_dir.absolute().resolve()
+    assert base_dir.exists() and base_dir.is_dir(), f"'{base_dir}' is not a directory!"
 
-    # search subdirectories for the main executable
-    for path in main_executable_path.glob(f"**/{main_executable_name}"):
+    # Search subdirectories for the file
+    for path in base_dir.glob(f"**/{file_name}"):
         if path.is_file():
-            return path.parent, path
+            return path
 
-    return main_executable_path, None
+    return None
 
 
 def is_port_accessible(port: int):
@@ -51,47 +49,25 @@ def find_open_server_port() -> int:
     )
 
 
-def launch(
-    main_executable_path: Path, main_executable_name: str
-) -> tuple[subprocess.Popen[bytes], int]:
-    directory, path = find_main_executable_path(
-        main_executable_path, main_executable_name
-    )
-
-    if path is None or not os.access(path, os.F_OK):
-        raise FileNotFoundError(
-            f"Unable to find RLBotServer at '{main_executable_path}'. "
-            "Is your antivirus messing you up? Check "
-            "https://github.com/RLBot/RLBot/wiki/Antivirus-Notes."
-        )
-
-    if not os.access(path, os.X_OK):
-        os.chmod(path, stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-
-    if not os.access(path, os.X_OK):
-        raise PermissionError(
-            "Unable to execute RLBotServer due to file permissions! Is your antivirus messing you up? "
-            f"Check https://github.com/RLBot/RLBot/wiki/Antivirus-Notes. The exact path is {path}"
-        )
-
+def launch(exe_path: Path) -> tuple[subprocess.Popen[bytes], int]:
     port = find_open_server_port()
 
     if CURRENT_OS == "Windows":
-        args = [str(path), str(port)]
+        args = [str(exe_path), str(port)]
     else:
-        args = f"{shlex.quote(path.as_posix())} {port}"  # on Unix, when shell=True, args must be a string for flags to reach the executable
-    DEFAULT_LOGGER.info("Launching RLBotServer with via %s", args)
+        args = f"{shlex.quote(exe_path.as_posix())} {port}"  # on Unix, when shell=True, args must be a string for flags to reach the executable
+    DEFAULT_LOGGER.info("Launching RLBotServer via %s", args)
 
-    return subprocess.Popen(args, shell=True, cwd=directory), port
+    return subprocess.Popen(args, shell=True, cwd=exe_path.parent), port
 
 
 def find_server_process(
-    main_executable_name: str,
+    exe_name: str,
 ) -> tuple[psutil.Process | None, int]:
     logger = DEFAULT_LOGGER
     for proc in psutil.process_iter():
         try:
-            if proc.name() != main_executable_name:
+            if proc.name() != exe_name:
                 continue
 
             args = proc.cmdline()
@@ -106,7 +82,7 @@ def find_server_process(
         except Exception as e:
             logger.error(
                 "Failed to read the name of a process while hunting for %s: %s",
-                main_executable_name,
+                exe_name,
                 e,
             )
 

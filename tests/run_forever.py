@@ -4,15 +4,19 @@ from time import sleep
 from rlbot import flat
 from rlbot.config import load_player_config
 from rlbot.managers import MatchManager
+from rlbot.utils.gateway import find_file
 from rlbot.utils.maps import GAME_MAP_TO_UPK, STANDARD_MAPS
+from rlbot.utils.os_detector import RLBOT_SERVER_NAME
 
 DIR = Path(__file__).parent
 
 BOT_PATH = DIR / "atba/atba.bot.toml"
-RLBOT_SERVER_FOLDER = DIR / "../../core/RLBotCS/bin/Release/"
+RLBOT_SERVER_PATH = find_file(
+    DIR / "../../core/RLBotCS/bin/Release/", RLBOT_SERVER_NAME
+)
 
 if __name__ == "__main__":
-    match_manager = MatchManager(RLBOT_SERVER_FOLDER)
+    match_manager = MatchManager(RLBOT_SERVER_PATH)
 
     current_map = -1
 
