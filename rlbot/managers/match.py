@@ -43,6 +43,14 @@ class MatchManager:
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         self.disconnect()
 
+    @property
+    def _rlbot_server_name(self) -> str:
+        return (
+            self.rlbot_server_path.stem
+            if self.rlbot_server_path is not None and self.rlbot_server_path.is_file()
+            else RLBOT_SERVER_NAME
+        )
+
     def ensure_server_started(self):
         """
         Ensures that RLBotServer is running, starting it if it is not.
@@ -51,11 +59,7 @@ class MatchManager:
         otherwise the global installed RLBotServer will be used, if any.
         """
 
-        exe_name = (
-            self.rlbot_server_path.stem
-            if self.rlbot_server_path is not None and self.rlbot_server_path.is_file()
-            else RLBOT_SERVER_NAME
-        )
+        exe_name = self._rlbot_server_name
         self.rlbot_server_process, self.rlbot_server_port = gateway.find_server_process(
             exe_name
         )
@@ -259,7 +263,7 @@ class MatchManager:
             # In theory this is all we need for the server to cleanly shut itself down
             self.rlbot_interface.stop_match(shutdown_server=True)
         except BrokenPipeError:
-            match gateway.find_server_process(self.main_executable_name)[0]:
+            match gateway.find_server_process(self._rlbot_server_name)[0]:
                 case psutil.Process() as proc:
                     self.logger.warning(
                         "Can't communicate with RLBotServer, ensuring shutdown."
@@ -281,12 +285,12 @@ class MatchManager:
             sleep(1)
 
             self.rlbot_server_process, _ = gateway.find_server_process(
-                self.main_executable_name
+                self._rlbot_server_name
             )
 
             if self.rlbot_server_process is not None:
                 self.logger.info(
-                    "Waiting for %s to shut down...", self.main_executable_name
+                    "Waiting for %s to shut down...", self._rlbot_server_name
                 )
 
                 if use_force_if_necessary:
@@ -295,13 +299,13 @@ class MatchManager:
                     elif sleeps == 4 or sleeps == 7:
                         self.logger.warning(
                             "%s is not responding to terminate requests.",
-                            self.main_executable_name,
+                            self._rlbot_server_name,
                         )
                         self.rlbot_server_process.terminate()
                     elif sleeps >= 10 and sleeps % 3 == 1:
                         self.logger.error(
                             "%s is not responding, forcefully killing.",
-                            self.main_executable_name,
+                            self._rlbot_server_name,
                         )
                         self.rlbot_server_process.kill()
 
