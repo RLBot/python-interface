@@ -234,6 +234,7 @@ class MatchManager:
         self.rlbot_interface.disconnect()
 
     def stop_match(self):
+        self.packet = None
         self.rlbot_interface.stop_match()
 
     def set_game_state(
