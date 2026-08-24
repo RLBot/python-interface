@@ -5,7 +5,6 @@ def fill_desired_game_state(
     balls: dict[int, flat.DesiredBallState] = {},
     cars: dict[int, flat.DesiredCarState] = {},
     match_info: flat.DesiredMatchInfo | None = None,
-    commands: list[str] = [],
 ) -> flat.DesiredGameState:
     """
     Converts the dictionaries to a DesiredGameState by
@@ -14,7 +13,6 @@ def fill_desired_game_state(
 
     game_state = flat.DesiredGameState(
         match_info=match_info,
-        console_commands=[flat.ConsoleCommand(cmd) for cmd in commands],
     )
 
     if balls:
