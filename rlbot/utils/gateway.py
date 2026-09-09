@@ -1,3 +1,4 @@
+import shlex
 import socket
 import subprocess
 from pathlib import Path
@@ -6,10 +7,7 @@ import psutil
 
 from rlbot.interface import RLBOT_SERVER_PORT
 from rlbot.utils.logging import DEFAULT_LOGGER
-from rlbot.utils.os_detector import CURRENT_OS
-
-if CURRENT_OS != "Windows":
-    import shlex
+from rlbot.utils.os_detector import CURRENT_OS, OS
 
 
 def find_file(base_dir: Path, file_name: str) -> Path | None:
@@ -34,7 +32,7 @@ def is_port_accessible(port: int):
         try:
             sock.bind(("127.0.0.1", port))
             return True
-        except:
+        except OSError:
             return False
 
 
@@ -52,7 +50,7 @@ def find_open_server_port() -> int:
 def launch(exe_path: Path) -> tuple[subprocess.Popen[bytes], int]:
     port = find_open_server_port()
 
-    if CURRENT_OS == "Windows":
+    if CURRENT_OS == OS.WINDOWS:
         args = [str(exe_path), str(port)]
     else:
         args = f"{shlex.quote(exe_path.as_posix())} {port}"  # on Unix, when shell=True, args must be a string for flags to reach the executable
@@ -79,7 +77,12 @@ def find_server_process(
             # read the port
             port = int(proc.cmdline()[-1])
             return proc, port
-        except Exception as e:
+        except (
+            psutil.NoSuchProcess,
+            psutil.AccessDenied,
+            psutil.ZombieProcess,
+            ValueError,
+        ) as e:
             logger.error(
                 "Failed to read the name of a process while hunting for %s: %s",
                 exe_name,
