@@ -2,6 +2,7 @@ import os
 import stat
 from pathlib import Path
 from time import sleep
+from typing import Self
 
 import psutil
 
@@ -37,7 +38,7 @@ class MatchManager:
         self.rlbot_interface: SocketRelay = SocketRelay("")
         self.rlbot_interface.packet_handlers.append(self._packet_reporter)
 
-    def __enter__(self) -> "MatchManager":
+    def __enter__(self) -> Self:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
@@ -74,12 +75,12 @@ class MatchManager:
                 self.logger.debug(
                     f"Could not find RLBotServer in cwd ('{path.parent}'), trying %localappdata% instead."
                 )
-                path = (
-                    Path(os.environ.get("LOCALAPPDATA"))
-                    / "RLBot5"
-                    / "bin"
-                    / RLBOT_SERVER_NAME
-                )
+                local_appdata = os.environ.get("LOCALAPPDATA")
+                if local_appdata is None:
+                    raise FileNotFoundError(
+                        "LOCALAPPDATA is not set, so the default RLBotServer location cannot be checked."
+                    )
+                path = Path(local_appdata) / "RLBot5" / "bin" / RLBOT_SERVER_NAME
             if not path.exists():
                 raise FileNotFoundError(
                     "Unable to find RLBotServer in the current working directory "
