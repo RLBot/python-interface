@@ -10,35 +10,43 @@ Also see the [main RLBot wiki](https://wiki.rlbot.org/) (make sure to avoid info
 
 ## Dev setup
 
-The following is how to setup a development environment for this project, NOT how to create a bot using this interface!
+The following is how to set up a development environment for this project, not how to create a bot using this interface.
 
-- Ensure Python 3.11+ is installed
-- Create a virtual Python environment
-  - `python3 -m venv venv`
-- Activate the virtual environment
-  - Windows: `venv\Scripts\activate.bat`
-  - Linux: `source venv/bin/activate`
-- Install the package
-  - `pip install --editable .`
-  - This will install the package in editable mode,
-  meaning you can make changes to the code, and they
-  will be reflected in the installed package without
-  having to run the command again
-- If you are making changes involving the flatbuffer schema and
+- Ensure Python 3.11+ is installed.
+- Install [uv](https://docs.astral.sh/uv/).
+- Create the environment and install the package with development dependencies:
+  - `uv sync --dev`
+- Activate the virtual environment when needed:
+  - Windows: `.venv\Scripts\activate`
+  - Linux: `source .venv/bin/activate`
+- Run commands without activating the environment with `uv run`.
+- If you are making changes involving the FlatBuffer schema and
   [flatbuffers_python](https://github.com/RLBot/flatbuffers-python),
   also install your local copy of that package in editable mode:
-  - `pip uninstall rlbot_flatbuffers`
-  - `pip install --editable <path/to/rlbot_flatbuffers>`
+  - `uv pip uninstall rlbot_flatbuffers`
+  - `uv pip install --editable <path/to/rlbot_flatbuffers>`
 
 This project is formatted using [Ruff](https://docs.astral.sh/ruff/formatter/).
 
-- Install: `pip install ruff`.
-- Sort imports: `ruff check --select I --fix`
-- Format code: `ruff format`
+- Check code: `uv run ruff check .`
+- Sort imports: `uv run ruff check --select I --fix`
+- Format code: `uv run ruff format`
+
+## Updating dependencies
+
+Use uv to change dependencies and update the lock file.
+
+- Add a runtime dependency: `uv add <package>`.
+- Add a development dependency: `uv add --dev <package>`.
+- Remove a dependency: `uv remove <package>`.
+- Update one dependency: `uv lock --upgrade-package <package>`.
+- Update all dependencies: `uv lock --upgrade`.
+- Install the locked dependencies: `uv sync --dev`.
 
 ## Testing
 
-- You can test launching a match with `python tests/runner.py`
+- Run all pytest tests with `uv run pytest`.
+- Test launching a match with `uv run python tests/runner.py`.
 
 ## Building
 
