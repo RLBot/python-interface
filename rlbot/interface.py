@@ -70,9 +70,6 @@ class SocketRelay:
     def _int_to_bytes(val: int) -> bytes:
         return val.to_bytes(2, byteorder="big")
 
-    def _read_int(self) -> int:
-        return int.from_bytes(self._read_exact(2), "big")
-
     def _read_exact(self, n: int) -> bytes:
         assert self.socket is not None, "Socket has not been established"
 
@@ -88,7 +85,19 @@ class SocketRelay:
         return bytes(buff)
 
     def read_message(self) -> bytes:
-        size = self._read_int()
+        assert self.socket is not None, "Socket has not been established"
+
+        # Only this first recv may raise BlockingIOError when the socket is non-blocking.
+        # Once any byte of a message has been consumed, the rest must be read blocking,
+        # otherwise the consumed bytes are lost and the stream loses its framing.
+        header = self.socket.recv(2)
+        if len(header) == 0:
+            raise EOFError
+        self.socket.setblocking(True)
+
+        if len(header) == 1:
+            header += self._read_exact(1)
+        size = int.from_bytes(header, "big")
         return self._read_exact(size)
 
     def send_bytes(self, data: bytes):
