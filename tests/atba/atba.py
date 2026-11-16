@@ -122,7 +122,7 @@ class Atba(Bot):
     def test_state_setting(self, packet: flat.GamePacket):
         if packet.match_info.seconds_elapsed > self.next_teleport:
             self.next_teleport = packet.match_info.seconds_elapsed + 10
-            self.set_game_state(
+            self.set_game_state_parts(
                 {
                     0: flat.DesiredBallState(
                         flat.DesiredPhysics(

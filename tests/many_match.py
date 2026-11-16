@@ -80,7 +80,7 @@ if __name__ == "__main__":
                 match_manager.packet.match_info.match_phase == flat.MatchPhase.Active
                 and match_manager.packet.match_info.game_time_remaining < 60 * 4 + 55
             ):
-                match_manager.set_game_state(commands=["Pause"])
+                match_manager.send_console_command("Pause")
                 paused = True
                 break
             sleep(1)
