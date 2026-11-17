@@ -234,20 +234,26 @@ class Script:
             )
         )
 
-    def set_game_state(
+    def send_console_command(self, cmd: str | flat.ConsoleCommand):
+        cmd = cmd if isinstance(cmd, flat.ConsoleCommand) else flat.ConsoleCommand(cmd)
+        self._game_interface.send_msg(cmd)
+
+    def set_game_state(self, game_state: flat.DesiredGameState):
+        self._game_interface.send_msg(game_state)
+
+    def set_game_state_parts(
         self,
         balls: dict[int, flat.DesiredBallState] = {},
         cars: dict[int, flat.DesiredCarState] = {},
         match_info: flat.DesiredMatchInfo | None = None,
-        commands: list[str] = [],
     ):
         """
         Sets the game to the desired state.
         Through this it is possible to manipulate the position, velocity, and rotations of cars and balls, and more.
-        See wiki for a full break down and examples.
+        See wiki for a full breakdown and examples.
         """
 
-        game_state = fill_desired_game_state(balls, cars, match_info, commands)
+        game_state = fill_desired_game_state(balls, cars, match_info)
         self._game_interface.send_msg(game_state)
 
     def set_loadout(self, loadout: flat.PlayerLoadout, index: int):

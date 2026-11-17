@@ -56,7 +56,7 @@ if __name__ == "__main__":
 
         while match_manager.packet.match_info.match_phase != flat.MatchPhase.Ended:
             if match_manager.packet.match_info.match_phase == flat.MatchPhase.Countdown:
-                match_manager.set_game_state(
+                match_manager.set_game_state_parts(
                     match_info=flat.DesiredMatchInfo(game_speed=2)
                 )
 

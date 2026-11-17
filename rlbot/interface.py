@@ -120,6 +120,7 @@ class SocketRelay:
             | flat.MatchConfiguration
             | flat.PlayerInput
             | flat.DesiredGameState
+            | flat.ConsoleCommand
             | flat.RenderGroup
             | flat.RemoveRenderGroup
             | flat.MatchComm
