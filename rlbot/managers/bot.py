@@ -1,4 +1,5 @@
 import os
+import sys
 from traceback import print_exc
 
 from rlbot import flat
@@ -61,7 +62,7 @@ class Bot:
                 "the constructor of the bot. If you are starting your bot manually, please set it "
                 "manually, e.g. `RLBOT_AGENT_ID=<agent_id> python yourbot.py`"
             )
-            exit(1)
+            sys.exit(1)
 
         self._game_interface = SocketRelay(agent_id, logger=self.logger)
         self._game_interface.match_config_handlers.append(self._handle_match_config)
@@ -104,12 +105,12 @@ class Bot:
 
         try:
             self.initialize()
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 - user initialize may raise anything; log and exit
             self.logger.critical(
                 "Bot %s failed to initialize due the following error: %s", self.name, e
             )
             print_exc()
-            exit()
+            sys.exit()
 
         self._initialized_bot = True
         self._game_interface.send_msg(flat.InitComplete())
@@ -150,7 +151,7 @@ class Bot:
 
         try:
             controller = self.get_output(packet)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 - user get_output may raise anything; keep bot alive
             self.logger.error(
                 "Bot %s encountered an error while processing game packet: %s",
                 self.name,
@@ -206,7 +207,7 @@ class Bot:
             )
 
             self._run()
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 - ensure unexpected errors are logged before retire
             self.logger.error("Unexpected error: %s", e)
         finally:
             self.retire()
@@ -283,8 +284,8 @@ class Bot:
 
     def set_game_state_parts(
         self,
-        balls: dict[int, flat.DesiredBallState] = {},
-        cars: dict[int, flat.DesiredCarState] = {},
+        balls: dict[int, flat.DesiredBallState] | None = None,
+        cars: dict[int, flat.DesiredCarState] | None = None,
         match_info: flat.DesiredMatchInfo | None = None,
     ):
         """

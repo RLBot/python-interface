@@ -1,4 +1,5 @@
 import os
+import sys
 from traceback import print_exc
 
 from rlbot import flat
@@ -46,7 +47,7 @@ class Script:
                 "the constructor of the script. If you are starting your script manually, please set "
                 "it manually, e.g. `RLBOT_AGENT_ID=<agent_id> python yourscript.py`"
             )
-            exit(1)
+            sys.exit(1)
 
         self._game_interface = SocketRelay(agent_id, logger=self.logger)
         self._game_interface.match_config_handlers.append(self._handle_match_config)
@@ -84,14 +85,14 @@ class Script:
 
         try:
             self.initialize()
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 - user initialize may raise anything; log and exit
             self.logger.critical(
                 "Script %s failed to initialize due the following error: %s",
                 self.name,
                 e,
             )
             print_exc()
-            exit()
+            sys.exit()
 
         self._initialized_script = True
         self._game_interface.send_msg(flat.InitComplete())
@@ -118,7 +119,7 @@ class Script:
 
         try:
             self.handle_packet(packet)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 - user handle_packet may raise anything; keep script alive
             self.logger.error(
                 "Script %s encountered an error to RLBot: %s", self.name, e
             )
@@ -243,8 +244,8 @@ class Script:
 
     def set_game_state_parts(
         self,
-        balls: dict[int, flat.DesiredBallState] = {},
-        cars: dict[int, flat.DesiredCarState] = {},
+        balls: dict[int, flat.DesiredBallState] | None = None,
+        cars: dict[int, flat.DesiredCarState] | None = None,
         match_info: flat.DesiredMatchInfo | None = None,
     ):
         """

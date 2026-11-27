@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+from typing import ClassVar
 
 DEFAULT_LOGGER_NAME = "rlbot"
 DEFAULT_LOGGER = None  # Set later
@@ -30,14 +31,14 @@ class CustomFormatter(logging.Formatter):
     RED = "\x1b[31;20m"
     BOLD_RED = "\x1b[31;1m"
     RESET = "\x1b[0m"
-    SECTIONS = [
+    SECTIONS: ClassVar[list[str]] = [
         "%(asctime)s " + RESET,
         "%(levelname)8s:" + RESET + GREEN + "%(name)12s" + RESET,
         "[%(filename)16s:%(lineno)3s - %(funcName)25s() ]" + RESET + " ",
         "%(message)s" + RESET,
     ]
 
-    FORMATS = {
+    FORMATS: ClassVar[dict[int, list[str]]] = {
         logging.DEBUG: [GREY, GREY, GREY, GREY],
         logging.INFO: [GREY, LIGHT_BLUE, GREY, LIGHT_BLUE],
         logging.WARNING: [YELLOW, YELLOW, YELLOW, YELLOW],

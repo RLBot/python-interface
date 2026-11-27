@@ -47,16 +47,15 @@ class Renderer:
 
     _logger = get_logger("renderer")
 
-    _used_group_ids: set[int] = set()
-    _group_id: int | None = None
-    _current_renders: list[flat.RenderMessage] = []
-
     _default_color = white
 
     _screen_width_factor = 1.0
     _screen_height_factor = 1.0
 
     def __init__(self, game_interface: SocketRelay):
+        self._used_group_ids: set[int] = set()
+        self._group_id: int | None = None
+        self._current_renders: list[flat.RenderMessage] = []
         self._send_msg: Callable[[flat.RenderGroup | flat.RemoveRenderGroup], None] = (
             game_interface.send_msg
         )
@@ -92,6 +91,8 @@ class Renderer:
         p = value * (1 - saturation)
         q = value * (1 - f * saturation)
         t = value * (1 - (1 - f) * saturation)
+
+        r = g = b = 0.0
 
         match i % 6:
             case 0:
@@ -256,7 +257,7 @@ class Renderer:
         anchor: flat.RenderAnchor | flat.BallAnchor | flat.CarAnchor | flat.Vector3,
         scale: float,
         foreground: flat.Color | None = None,
-        background: flat.Color = flat.Color(a=0),
+        background: flat.Color | None = None,
         h_align: flat.TextHAlign = flat.TextHAlign.Left,
         v_align: flat.TextVAlign = flat.TextVAlign.Top,
     ):
@@ -264,6 +265,8 @@ class Renderer:
         Draws text anchored in 3d space.
         Characters of the font are 20 pixels tall and 10 pixels wide when `scale == 1.0`.
         """
+        if background is None:
+            background = flat.Color(a=0)
         self.draw(
             flat.String3D(
                 text,
@@ -283,7 +286,7 @@ class Renderer:
         y: float,
         scale: float,
         foreground: flat.Color | None = None,
-        background: flat.Color = flat.Color(a=0),
+        background: flat.Color | None = None,
         h_align: flat.TextHAlign = flat.TextHAlign.Left,
         v_align: flat.TextVAlign = flat.TextVAlign.Top,
     ):
@@ -293,6 +296,8 @@ class Renderer:
         Use `set_resolution` to change to pixel coordinates.
         Characters of the font are 20 pixels tall and 10 pixels wide when `scale == 1.0`.
         """
+        if background is None:
+            background = flat.Color(a=0)
         self.draw(
             flat.String2D(
                 text,

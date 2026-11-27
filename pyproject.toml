@@ -17,6 +17,7 @@ Repository = "https://github.com/RLBot/python-interface"
 
 [dependency-groups]
 dev = [
+  "pytest>=9.1.1",
   "ruff>=0.16.0",
   "toml>=0.10.2",
 ]
@@ -27,6 +28,8 @@ build-backend = "setuptools.build_meta"
 
 [tool.basedpyright]
 typeCheckingMode = "standard"
+venvPath = "."
+venv = ".venv"
 
 [tool.ruff.format]
 docstring-code-format = true

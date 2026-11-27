@@ -1,4 +1,5 @@
 import os
+import sys
 from logging import Logger
 from traceback import print_exc
 
@@ -24,12 +25,8 @@ class Hivemind:
     """
 
     _logger = DEFAULT_LOGGER
-    loggers: list[Logger] = []
 
     team: int = -1
-    indices: list[int] = []
-    names: list[str] = []
-    player_ids: list[int] = []
 
     match_config = flat.MatchConfiguration()
     """
@@ -55,6 +52,11 @@ class Hivemind:
     _latest_prediction = flat.BallPrediction()
 
     def __init__(self, default_agent_id: str | None = None):
+        self.loggers: list[Logger] = []
+        self.indices: list[int] = []
+        self.names: list[str] = []
+        self.player_ids: list[int] = []
+
         agent_id = os.environ.get("RLBOT_AGENT_ID") or default_agent_id
 
         if agent_id is None:
@@ -63,7 +65,7 @@ class Hivemind:
                 "the constructor of the bot. If you are starting your bot manually, please set it "
                 "manually, e.g. `RLBOT_AGENT_ID=<agent_id> python yourbot.py`"
             )
-            exit(1)
+            sys.exit(1)
 
         self._game_interface = SocketRelay(agent_id, logger=self._logger)
         self._game_interface.match_config_handlers.append(self._handle_match_config)
@@ -108,14 +110,14 @@ class Hivemind:
 
         try:
             self.initialize()
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 - user initialize may raise anything; log and exit
             self._logger.critical(
                 "Hivemind (of %s) failed to initialize due the following error: %s",
                 "Unknown_Bots" if len(self.names) == 0 else ", ".join(self.names),
                 e,
             )
             print_exc()
-            exit()
+            sys.exit()
 
         self._initialized_bot = True
         self._game_interface.send_msg(flat.InitComplete())
@@ -155,8 +157,8 @@ class Hivemind:
         self.ball_prediction = self._latest_prediction
 
         try:
-            controller = self.get_outputs(packet)
-        except Exception as e:
+            controllers = self.get_outputs(packet)
+        except Exception as e:  # noqa: BLE001 - user get_outputs may raise anything; keep hivemind alive
             self._logger.error(
                 "Hivemind (of %s) encountered an error while processing game packet: %s",
                 ", ".join(self.names),
@@ -165,7 +167,7 @@ class Hivemind:
             print_exc()
             return
 
-        for index, controller in controller.items():
+        for index, controller in controllers.items():
             if index not in self.indices:
                 self._logger.warning(
                     "Hivemind produced controller state for a bot index that is does not"
@@ -299,8 +301,8 @@ class Hivemind:
 
     def set_game_state_parts(
         self,
-        balls: dict[int, flat.DesiredBallState] = {},
-        cars: dict[int, flat.DesiredCarState] = {},
+        balls: dict[int, flat.DesiredBallState] | None = None,
+        cars: dict[int, flat.DesiredCarState] | None = None,
         match_info: flat.DesiredMatchInfo | None = None,
     ):
         """

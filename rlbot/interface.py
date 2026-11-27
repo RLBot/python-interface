@@ -39,17 +39,6 @@ class SocketRelay:
     _running = False
     """Indicates whether a messages are being handled by the `run` loop (potentially in a background thread)"""
 
-    on_connect_handlers: list[Callable[[], None]] = []
-    packet_handlers: list[Callable[[flat.GamePacket], None]] = []
-    field_info_handlers: list[Callable[[flat.FieldInfo], None]] = []
-    match_config_handlers: list[Callable[[flat.MatchConfiguration], None]] = []
-    match_comm_handlers: list[Callable[[flat.MatchComm], None]] = []
-    ball_prediction_handlers: list[Callable[[flat.BallPrediction], None]] = []
-    controllable_team_info_handlers: list[
-        Callable[[flat.ControllableTeamInfo], None]
-    ] = []
-    raw_handlers: list[Callable[[flat.CorePacket], None]] = []
-
     socket: sock | None = None
 
     def __init__(
@@ -61,6 +50,16 @@ class SocketRelay:
         self.agent_id = agent_id
         self.connection_timeout = connection_timeout
         self.logger = get_logger("interface") if logger is None else logger
+        self.on_connect_handlers: list[Callable[[], None]] = []
+        self.packet_handlers: list[Callable[[flat.GamePacket], None]] = []
+        self.field_info_handlers: list[Callable[[flat.FieldInfo], None]] = []
+        self.match_config_handlers: list[Callable[[flat.MatchConfiguration], None]] = []
+        self.match_comm_handlers: list[Callable[[flat.MatchComm], None]] = []
+        self.ball_prediction_handlers: list[Callable[[flat.BallPrediction], None]] = []
+        self.controllable_team_info_handlers: list[
+            Callable[[flat.ControllableTeamInfo], None]
+        ] = []
+        self.raw_handlers: list[Callable[[flat.CorePacket], None]] = []
 
     def __del__(self):
         if self.socket is not None:
@@ -266,7 +265,7 @@ class SocketRelay:
         except BlockingIOError:
             # No incoming messages and blocking==False
             return MsgHandlingResult.NO_INCOMING_MSGS
-        except:
+        except (EOFError, OSError):
             self.logger.error("SocketRelay disconnected unexpectedly!")
             return MsgHandlingResult.TERMINATED
 
@@ -279,7 +278,7 @@ class SocketRelay:
                 e,
             )
             return MsgHandlingResult.TERMINATED
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 - user handlers can raise anything; keep boundary log-and-terminate behavior
             self.logger.error(
                 "Unexpected error while handling message of type: %s",
                 e,
@@ -327,7 +326,7 @@ class SocketRelay:
             case _:
                 self.logger.warning(
                     "Received unknown message type: %s",
-                    type(flatbuffer.item).__name__,
+                    type(flatbuffer.message).__name__,
                 )
 
         return MsgHandlingResult.MORE_MSGS_QUEUED
