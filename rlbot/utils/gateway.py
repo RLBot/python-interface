@@ -69,24 +69,17 @@ def find_server_process(
                 continue
 
             args = proc.cmdline()
-
-            if len(args) < 2:
-                # server has no specified port, return default
-                return proc, RLBOT_SERVER_PORT
-
-            # read the port
-            port = int(proc.cmdline()[-1])
-            return proc, port
-        except (
-            psutil.NoSuchProcess,
-            psutil.AccessDenied,
-            psutil.ZombieProcess,
-            ValueError,
-        ) as e:
+        except (psutil.NoSuchProcess, psutil.AccessDenied) as e:
             logger.error(
-                "Failed to read the name of a process while hunting for %s: %s",
-                exe_name,
-                e,
+                "Failed to inspect a process while looking for %s: %s", exe_name, e
             )
+            continue
+
+        # The socket port comes before the optional game port.
+        try:
+            port = int(args[1])
+        except (IndexError, ValueError):
+            port = RLBOT_SERVER_PORT
+        return proc, port if 0 <= port <= 65535 else RLBOT_SERVER_PORT
 
     return None, RLBOT_SERVER_PORT
