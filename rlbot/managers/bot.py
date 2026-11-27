@@ -284,8 +284,8 @@ class Bot:
 
     def set_game_state_parts(
         self,
-        balls: dict[int, flat.DesiredBallState] = {},
-        cars: dict[int, flat.DesiredCarState] = {},
+        balls: dict[int, flat.DesiredBallState] | None = None,
+        cars: dict[int, flat.DesiredCarState] | None = None,
         match_info: flat.DesiredMatchInfo | None = None,
     ):
         """
