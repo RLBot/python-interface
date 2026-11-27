@@ -930,3 +930,8 @@ class TestPaintBehavior:
         )
         assert load_player_loadout(p, 0).team_color_id == 31
         assert load_player_loadout(p, 1).team_color_id == 32
+
+    def test_invalid_team_does_not_select_orange_loadout(self, tmp_path: Path):
+        path = write(tmp_path / "loadout.toml", "[orange_loadout]\ncar_id = 23\n")
+        with pytest.raises(ConfigParsingException, match="team"):
+            load_player_loadout(path, 2)

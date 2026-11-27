@@ -562,8 +562,13 @@ def __unlinked_psyonix(
 
 def load_player_loadout(path: Path | str, team: int) -> flat.PlayerLoadout:
     """
-    Reads the loadout toml file at the provided path and extracts the `PlayerLoadout` for the given team.
+    Reads the loadout TOML for the blue team (0) or the orange team (1).
     """
+    if not isinstance(team, int) or isinstance(team, bool) or team not in (0, 1):
+        raise ConfigParsingException(
+            f"Invalid team {team!r}. Use 0 (blue) or 1 (orange)."
+        )
+
     path = __abspath(path)
     with open(path, "rb") as f:
         config = tomllib.load(f)
