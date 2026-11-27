@@ -854,6 +854,12 @@ class TestTypeValidation:
         with pytest.raises(ConfigParsingException):
             load_match_config(p)
 
+    @pytest.mark.parametrize("value", ["-1", "999"])
+    def test_out_of_range_numeric_enum_raises(self, tmp_path: Path, value: str):
+        path = write(tmp_path / "m.toml", f'[mutators]\nseries_length = "{value}"\n')
+        with pytest.raises(ConfigParsingException, match="series_length"):
+            load_match_config(path)
+
     def test_non_list_cars_raises(self, tmp_path: Path):
         p = write(tmp_path / "m.toml", 'cars = "nope"\n')
         with pytest.raises(ConfigParsingException):

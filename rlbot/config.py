@@ -22,8 +22,10 @@ def __enum(table: dict[str, str | Any], key: str, enum: Any, default: int = 0) -
     if stripped != "" and stripped.lstrip("+-").isdigit():
         try:
             return enum(int(stripped))
-        except ValueError:
-            raise ConfigParsingException(f"Invalid value {v!r} for key '{key}'.")
+        except (ValueError, OverflowError) as exc:
+            raise ConfigParsingException(
+                f"Invalid value {v!r} for key '{key}'."
+            ) from exc
     lowered = stripped.lower()
     for name in dir(enum):
         if name.startswith("_"):
