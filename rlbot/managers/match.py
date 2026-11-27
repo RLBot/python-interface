@@ -47,7 +47,7 @@ class MatchManager:
     @property
     def _rlbot_server_name(self) -> str:
         return (
-            self.rlbot_server_path.stem
+            self.rlbot_server_path.name
             if self.rlbot_server_path is not None and self.rlbot_server_path.is_file()
             else RLBOT_SERVER_NAME
         )
