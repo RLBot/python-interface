@@ -479,6 +479,23 @@ class TestEnvironment:
         assert values.get("DOLLAR") == "cross-value/x"
         assert values.get("BRACED") == "cross-value/y"
 
+    def test_platform_expansion_does_not_rescan_replacements(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ):
+        monkeypatch.setattr(config_mod, "CURRENT_OS", OS.LINUX)
+        monkeypatch.setenv("RLBOT_OUTER", "$RLBOT_INNER")
+        monkeypatch.setenv("RLBOT_INNER", "value")
+        monkeypatch.setenv("RLBOT_TEST_DIR(X86)", "test-dir")
+        path = write(
+            tmp_path / "bot.toml",
+            "[settings.environment.linux]\n"
+            'VALUE = "%RLBOT_OUTER%|$RLBOT_INNER|%RLBOT_TEST_DIR(X86)%"\n',
+        )
+        bot = load_player_config(path, 0).variety
+        assert {e.name: e.value for e in _custom_env(bot)} == {
+            "VALUE": "$RLBOT_INNER|value|test-dir"
+        }
+
     def test_inactive_linux_values_stay_absent_and_common_stays_literal(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ):

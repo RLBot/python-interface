@@ -118,24 +118,15 @@ def __run_command(settings: dict[str, Any]) -> str:
     return run_command
 
 
-__windows_env_pattern = re.compile(r"%([A-Za-z_][A-Za-z0-9_]*)%")
-__unix_env_pattern = re.compile(
-    r"\$(?:\{([A-Za-z_][A-Za-z0-9_]*)\}|([A-Za-z_][A-Za-z0-9_]*))"
+__environment_pattern = re.compile(
+    r"%([^%]+)%|\$(?:\{([A-Za-z_][A-Za-z0-9_]*)\}|([A-Za-z_][A-Za-z0-9_]*))"
 )
 
 
-def __expand_windows_env(value: str) -> str:
-    return __windows_env_pattern.sub(
-        lambda m: os.environ.get(m.group(1), m.group(0)), value
-    )
-
-
-def __expand_unix_env(value: str) -> str:
-    return __unix_env_pattern.sub(
-        lambda m: os.environ.get(
-            m.group(1) if m.group(1) is not None else m.group(2),
-            m.group(0),
-        ),
+def __expand_environment(value: str) -> str:
+    # Use one pass so variable references inside replacement values stay literal.
+    return __environment_pattern.sub(
+        lambda m: os.environ.get(m.group(1) or m.group(2) or m.group(3), m.group(0)),
         value,
     )
 
@@ -171,9 +162,7 @@ def __environment(settings: dict[str, Any]) -> list[flat.EnvironmentVariable]:
                 raise ConfigParsingException(
                     f"'{key}' has value {raw!r}. Expected a string."
                 )
-            # Active platform values expand both styles, like C#:
-            # `%` expansion first, then Unix expansion.
-            values[key] = __expand_unix_env(__expand_windows_env(raw))
+            values[key] = __expand_environment(raw)
 
     return [flat.EnvironmentVariable(name=k, value=v) for k, v in values.items()]
 
