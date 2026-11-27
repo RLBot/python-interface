@@ -700,6 +700,22 @@ class TestPsyonixLinkedValues:
             == flat.PsyonixSkill.Pro
         )
 
+    @pytest.mark.parametrize("car_fields", ["", 'type = "RLBot"\nconfig_file = ""\n'])
+    def test_rlbot_without_config_uses_psyonix(self, tmp_path: Path, car_fields: str):
+        write(tmp_path / "loadout.toml", "[orange_loadout]\ncar_id = 23\n")
+        path = write(
+            tmp_path / "m.toml",
+            f"[[cars]]\n{car_fields}"
+            'team = "Orange"\nskill = "Pro"\nname = "Boomer"\n'
+            'loadout_file = "loadout.toml"\n',
+        )
+        car = load_match_config(path).player_configurations[0]
+        bot = _psyonix(car.variety)
+        assert car.team == 1
+        assert bot.name == "Boomer"
+        assert bot.bot_skill == flat.PsyonixSkill.Pro
+        assert _loadout(bot.loadout).car_id == 23
+
     def test_psyonix_default_skill_is_allstar(self, tmp_path: Path):
         p = write(tmp_path / "m.toml", '[[cars]]\nteam = 1\ntype = "Psyonix"\n')
         m = load_match_config(p)

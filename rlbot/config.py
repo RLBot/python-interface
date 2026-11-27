@@ -253,26 +253,21 @@ def load_match_config(config_path: Path | str) -> flat.MatchConfiguration:
                 raise ConfigParsingException(
                     f"Invalid player type {variant!r} for player {len(players)}."
                 )
+        elif variant in ("rlbot", "psyonix"):
+            # Core uses a Psyonix bot when an RLBot car has no config file.
+            skill = __enum(
+                car_table,
+                "skill",
+                flat.PsyonixSkill,
+                int(flat.PsyonixSkill.AllStar),
+            )
+            players.append(
+                load_psyonix_config(team, skill, name_override, loadout_override)
+            )
         else:
-            if variant == "psyonix":
-                skill = __enum(
-                    car_table,
-                    "skill",
-                    flat.PsyonixSkill,
-                    int(flat.PsyonixSkill.AllStar),
-                )
-                players.append(
-                    __unlinked_psyonix(team, skill, name_override, loadout_override)
-                )
-            elif variant == "rlbot":
-                raise ConfigParsingException(
-                    f"'cars[{i}].config_file' is empty. "
-                    + "Custom bots must specify a config file."
-                )
-            else:
-                raise ConfigParsingException(
-                    f"Invalid player type {variant!r} for player {len(players)}."
-                )
+            raise ConfigParsingException(
+                f"Invalid player type {variant!r} for player {len(players)}."
+            )
 
     scripts: list[flat.ScriptConfiguration] = []
     scripts_list = __list(config, "scripts")
@@ -536,27 +531,6 @@ def load_match_config(config_path: Path | str) -> flat.MatchConfiguration:
         enable_state_setting=__bool(match_table, "enable_state_setting", True),
         auto_save_replay=__auto_save_replay(match_table),
         freeplay=__bool(match_table, "freeplay"),
-    )
-
-
-def __unlinked_psyonix(
-    team: int,
-    skill: flat.PsyonixSkill,
-    name_override: str | None,
-    loadout_override: Path | str | None,
-) -> flat.PlayerConfiguration:
-    if loadout_override is None or loadout_override == "":
-        loadout = None
-    else:
-        loadout = load_player_loadout(loadout_override, team)
-    return flat.PlayerConfiguration(
-        flat.PsyonixBot(
-            name_override if name_override is not None else "",
-            loadout,
-            skill,
-        ),
-        team,
-        0,
     )
 
 
